@@ -1,70 +1,46 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 function VerifyEmail() {
+  const { token } = useParams();
 
-    const { token } = useParams();
+  const [message, setMessage] = useState("Verifying your email...");
 
-    const navigate = useNavigate();
+  useEffect(() => {
+    async function verify() {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/auth/verify/${token}`
+        );
 
-    const [message, setMessage] = useState("Verifying Email...");
+        const data = await response.json();
 
-    useEffect(() => {
+        if (response.ok) {
+          setMessage("✅ Email verified successfully!");
+        } else {
+          setMessage(data.message || "Verification failed.");
+        }
+      } catch (err) {
+        setMessage("Server error.");
+      }
+    }
 
-        const verify = async () => {
+    verify();
+  }, [token]);
 
-            try {
-
-                const res = await fetch(
-                    `http://localhost:5000/api/auth/verify/${token}`
-                );
-
-                const data = await res.json();
-
-                if (data.success) {
-
-                    setMessage("✅ Email Verified Successfully");
-
-                    setTimeout(() => {
-
-                        navigate("/login");
-
-                    }, 3000);
-
-                } else {
-
-                    setMessage(data.message);
-
-                }
-
-            } catch {
-
-                setMessage("Verification Failed");
-
-            }
-
-        };
-
-        verify();
-
-    }, [token, navigate]);
-
-    return (
-
-        <div
-            style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "100vh",
-                fontSize: "24px"
-            }}
-        >
-            {message}
-        </div>
-
-    );
-
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        fontSize: "24px",
+      }}
+    >
+      {message}
+    </div>
+  );
 }
 
 export default VerifyEmail;
