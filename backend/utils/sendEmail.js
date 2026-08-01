@@ -1,39 +1,24 @@
 import transporter from "../config/mail.js";
 
-const sendEmail = async (
+const sendEmail = async (email, subject, html) => {
+  try {
+    console.log("📧 Sending email to:", email);
 
-email,
+    const info = await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject,
+      html,
+    });
 
-subject,
+    console.log("✅ Email Sent");
+    console.log(info);
 
-html
-
-)=>{
-
-try{
-
-await transporter.sendMail({
-
-from:process.env.EMAIL_USER,
-
-to:email,
-
-subject,
-
-html
-
-});
-
-console.log("✅ Email Sent");
-
-}
-
-catch(err){
-
-console.log(err);
-
-}
-
-}
+    return info;
+  } catch (err) {
+    console.error("❌ Email Error:", err);
+    throw err; // Important: pass the error to the signup controller
+  }
+};
 
 export default sendEmail;
