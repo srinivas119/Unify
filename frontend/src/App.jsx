@@ -53,10 +53,10 @@ function App() {
         }
       />
 
-      <Route
-        path="/verify/:token"
-        element={<VerifyEmail />}
-      />
+     <Route
+  path="/verify-email"
+  element={<VerifyEmail />}
+/>
     </Routes>
   );
 }
