@@ -1,0 +1,358 @@
+/* ===========================
+   PAGE
+=========================== */
+
+.container {
+  min-height: 100vh;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #eef3ff, #ffffff);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.card {
+  width: 100%;
+  max-width: 950px;
+
+  background: white;
+
+  border-radius: 20px;
+
+  padding: 35px;
+
+  box-shadow: 0 20px 45px rgba(0, 0, 0, .08);
+}
+
+/* ===========================
+   HEADER
+=========================== */
+
+.header {
+  text-align: center;
+  margin-bottom: 35px;
+}
+
+.header h1 {
+  font-size: 42px;
+  color: #2563eb;
+  margin-bottom: 10px;
+}
+
+.header p {
+  color: #6b7280;
+  font-size: 16px;
+}
+
+/* ===========================
+   PLATFORM CARD
+=========================== */
+
+.platformCard {
+
+  display: grid;
+
+  grid-template-columns: 260px 1fr;
+
+  gap: 25px;
+
+  align-items: center;
+
+  padding: 18px 22px;
+
+  margin-bottom: 20px;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 18px;
+
+  transition: .3s;
+
+  background: white;
+}
+
+.platformCard:hover {
+
+  border-color: #2563eb;
+
+  box-shadow: 0 8px 20px rgba(37,99,235,.08);
+
+}
+
+/* ===========================
+   LEFT
+=========================== */
+
+.left {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 18px;
+}
+
+.iconBox {
+
+  width: 65px;
+
+  height: 65px;
+
+  border-radius: 16px;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  background: #f5f7ff;
+
+  flex-shrink: 0;
+}
+
+.platformInfo {
+
+  display: flex;
+
+  flex-direction: column;
+}
+
+.platformInfo h3 {
+
+  margin: 0;
+
+  font-size: 22px;
+
+  color: #111827;
+}
+
+.platformInfo span {
+
+  color: #6b7280;
+
+  font-size: 14px;
+
+  margin-top: 4px;
+}
+
+/* ===========================
+   ICONS
+=========================== */
+
+.leetcode {
+
+  color: #FFA116;
+
+  font-size: 34px;
+}
+
+.codechef {
+
+  color: #5B4638;
+
+  font-size: 34px;
+}
+
+.codeforces {
+
+  color: #1F8ACB;
+
+  font-size: 34px;
+}
+
+.gfg {
+
+  color: #2F8D46;
+
+  font-size: 34px;
+}
+
+.github {
+
+  color: #111827;
+
+  font-size: 34px;
+}
+
+/* ===========================
+   INPUT
+=========================== */
+
+.inputWrapper {
+
+  position: relative;
+
+  width: 100%;
+}
+
+.inputWrapper input {
+
+  width: 100%;
+
+  box-sizing: border-box;
+
+  height: 52px;
+
+  padding: 0 45px 0 18px;
+
+  border: 1px solid #d1d5db;
+
+  border-radius: 12px;
+
+  outline: none;
+
+  font-size: 15px;
+
+  transition: .25s;
+}
+
+.inputWrapper input:hover {
+
+  border-color: #93c5fd;
+}
+
+.inputWrapper input:focus {
+
+  border-color: #2563eb;
+
+  box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+
+}
+
+/* ===========================
+   CLEAR ICON
+=========================== */
+
+.clearIcon {
+
+  position: absolute;
+
+  right: 14px;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  font-size: 22px;
+
+  color: #9ca3af;
+
+  cursor: pointer;
+
+  transition: .2s;
+}
+
+.clearIcon:hover {
+
+  color: #ef4444;
+
+  transform: translateY(-50%) scale(1.15);
+}
+
+/* ===========================
+   BUTTONS
+=========================== */
+
+.buttons {
+
+  margin-top: 35px;
+
+  display: flex;
+
+  justify-content: center;
+
+  gap: 18px;
+}
+
+.cancelBtn,
+.saveBtn {
+
+  padding: 14px 34px;
+
+  border-radius: 12px;
+
+  border: none;
+
+  cursor: pointer;
+
+  font-size: 16px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  transition: .3s;
+}
+
+.cancelBtn {
+
+  background: white;
+
+  border: 1px solid #d1d5db;
+}
+
+.cancelBtn:hover {
+
+  background: #f3f4f6;
+}
+
+.saveBtn {
+
+  color: white;
+
+  background: linear-gradient(90deg,#2563eb,#1d4ed8);
+}
+
+.saveBtn:hover {
+
+  transform: translateY(-2px);
+
+  box-shadow: 0 10px 20px rgba(37,99,235,.25);
+
+}
+
+/* ===========================
+   MOBILE
+=========================== */
+
+@media (max-width: 768px) {
+
+  .card {
+
+    padding: 20px;
+  }
+
+  .header h1 {
+
+    font-size: 32px;
+  }
+
+  .platformCard {
+
+    grid-template-columns: 1fr;
+
+    gap: 16px;
+  }
+
+  .left {
+
+    justify-content: flex-start;
+  }
+
+  .buttons {
+
+    flex-direction: column;
+  }
+
+  .cancelBtn,
+  .saveBtn {
+
+    width: 100%;
+  }
+}
