@@ -333,8 +333,8 @@ export const getCurrentUser = async (req, res) => {
 
         );
 
-       return res.redirect(
-  "http://localhost:5173/login"
+return res.redirect(
+  "https://unify-pink.vercel.app/login"
 );
 
     }
