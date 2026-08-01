@@ -66,9 +66,7 @@ export const signup = async (req, res) => {
 
         );
 
-        const link =
-`http://localhost:5000/api/auth/verify/${verificationToken}`;
-
+       const link = `https://unify-pink.vercel.app/verify-email?token=${verificationToken}`;
         await sendEmail(
 
             email,
