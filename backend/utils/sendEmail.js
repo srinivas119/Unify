@@ -1,24 +1,16 @@
-import transporter from "../config/mail.js";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendEmail = async (email, subject, html) => {
-  try {
-    console.log("📧 Sending email to:", email);
+  await resend.emails.send({
+    from: "UnifyCode <onboarding@resend.dev>",
+    to: email,
+    subject,
+    html,
+  });
 
-    const info = await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject,
-      html,
-    });
-
-    console.log("✅ Email Sent");
-    console.log(info);
-
-    return info;
-  } catch (err) {
-    console.error("❌ Email Error:", err);
-    throw err; // Important: pass the error to the signup controller
-  }
+  console.log("✅ Email Sent");
 };
 
 export default sendEmail;
