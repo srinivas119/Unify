@@ -1,41 +1,51 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 function VerifyEmail() {
-  const { token } = useParams();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const token = searchParams.get("token");
 
   const [message, setMessage] = useState("Verifying your email...");
 
   useEffect(() => {
-    async function verify() {
+    const verify = async () => {
       try {
-        const response = await fetch(
+        const res = await fetch(
           `${import.meta.env.VITE_API_URL}/api/auth/verify/${token}`
         );
 
-        const data = await response.json();
+        const data = await res.json();
 
-        if (response.ok) {
+        if (res.ok) {
           setMessage("✅ Email verified successfully!");
+
+          setTimeout(() => {
+            navigate("/login");
+          }, 2000);
         } else {
           setMessage(data.message || "Verification failed.");
         }
       } catch (err) {
-        setMessage("Server error.");
+        setMessage("Server error. Please try again.");
       }
-    }
+    };
 
-    verify();
-  }, [token]);
+    if (token) {
+      verify();
+    }
+  }, [token, navigate]);
 
   return (
     <div
       style={{
+        height: "100vh",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        height: "100vh",
         fontSize: "24px",
+        fontWeight: "bold",
       }}
     >
       {message}
