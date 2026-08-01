@@ -26,7 +26,7 @@ function UserProfile() {
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          "http://localhost:5000/api/platforms",
+          `${import.meta.env.VITE_API_URL}/api/platforms`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -57,7 +57,7 @@ function UserProfile() {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        "http://localhost:5000/api/platforms/connect",
+        `${import.meta.env.VITE_API_URL}/api/platforms/connect`,
         {
           method: "POST",
           headers: {
