@@ -4,7 +4,8 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
 import { checkUserExists, createUser } from "../services/authService.js";
-import sendEmail from "../utils/sendEmail.js";
+// Example in backend/controllers/authController.js
+import sendEmail from "../config/mail.js";
 import verificationEmail from "../templates/verificationEmail.js";
 
 // ========================================
