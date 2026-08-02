@@ -102,7 +102,36 @@ export const connectPlatforms = async (req, res) => {
     });
   }
 };
+// controllers/platformController.js
 
+export const runPlatformScript = async (req, res) => {
+  const { platform, username } = req.body;
+
+  if (!platform || !username) {
+    return res.status(400).json({ error: "Platform and username are required." });
+  }
+
+  const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL || "https://unify-python-service.onrender.com";
+
+  try {
+    const response = await fetch(
+      `${PYTHON_SERVICE_URL}/fetch/${encodeURIComponent(platform)}/${encodeURIComponent(username)}`
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      return res.status(response.status).json({ 
+        error: result.detail || "Failed to fetch data from Python service." 
+      });
+    }
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("❌ Python Service Connection Error:", error);
+    return res.status(500).json({ error: "Failed to connect to Python backend service." });
+  }
+};
 // =========================
 // Get Platform Usernames
 // =========================
