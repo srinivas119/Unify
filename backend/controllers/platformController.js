@@ -3,9 +3,6 @@ import pool from "../config/database.js";
 const PYTHON_SERVICE_URL =
   process.env.PYTHON_SERVICE_URL || "https://python-service-k16u.onrender.com";
 
-/**
- * Safe conversion helpers to prevent NaN/null issues in PostgreSQL
- */
 const safeInt = (val) => {
   if (val === null || val === undefined) return 0;
   const parsed = parseInt(val, 10);
@@ -19,7 +16,7 @@ const safeFloat = (val) => {
 };
 
 /**
- * Helper to fetch data from Python service and atomic UPSERT into `coding_profiles`
+ * Fetch data from Python service & atomic UPSERT into `coding_profiles`
  */
 const syncPlatformData = async (userId, platform, username) => {
   if (!username) return null;
@@ -36,13 +33,12 @@ const syncPlatformData = async (userId, platform, username) => {
 
     const result = await response.json();
     if (!result || !result.data) {
-      console.warn(`⚠️ No data payload returned for platform: ${platform}`);
+      console.warn(`⚠️ No payload returned for platform: ${platform}`);
       return null;
     }
 
     const data = result.data;
 
-    // Atomic UPSERT based on platform
     switch (platform.toLowerCase()) {
       case "github": {
         const repositories = safeInt(data.repositories || data.repos || data.public_repos);
@@ -77,7 +73,7 @@ const syncPlatformData = async (userId, platform, username) => {
             contributions,
             commits,
             streak,
-            data.languages || {}, // Raw object for JSONB
+            JSON.stringify(data.languages || {}),
           ]
         );
         break;
@@ -87,8 +83,6 @@ const syncPlatformData = async (userId, platform, username) => {
         const easy = safeInt(data.easy || data.easy_solved);
         const medium = safeInt(data.medium || data.medium_solved);
         const hard = safeInt(data.hard || data.hard_solved);
-
-        // Fallback: Calculate total solved if payload returns 0 or missing key
         const totalLeetCodeSolved =
           safeInt(data.solved || data.total_solved || data.solved_count) || (easy + medium + hard);
 
@@ -131,8 +125,6 @@ const syncPlatformData = async (userId, platform, username) => {
         const easy = safeInt(data.easy || data.easy_solved);
         const medium = safeInt(data.medium || data.medium_solved);
         const hard = safeInt(data.hard || data.hard_solved);
-
-        // Fallback: If 'total' or 'solved' isn't explicitly provided, fallback to sum or 0
         const totalCodeforcesSolved =
           safeInt(data.total || data.solved || data.total_solved) || (easy + medium + hard);
 
@@ -167,8 +159,6 @@ const syncPlatformData = async (userId, platform, username) => {
         const easy = safeInt(data.easy || data.easy_solved);
         const medium = safeInt(data.medium || data.medium_solved);
         const hard = safeInt(data.hard || data.hard_solved);
-
-        // Fallback: Calculate total solved if payload omits 'total'
         const totalCodechefSolved =
           safeInt(data.total || data.solved || data.total_solved) || (easy + medium + hard);
 
@@ -201,8 +191,6 @@ const syncPlatformData = async (userId, platform, username) => {
         const easy = safeInt(data.easy || data.easy_solved);
         const medium = safeInt(data.medium || data.medium_solved);
         const hard = safeInt(data.hard || data.hard_solved);
-
-        // Fallback: Calculate total solved if payload omits 'total'
         const totalGfgSolved =
           safeInt(data.total || data.solved || data.total_solved) || (easy + medium + hard);
 
@@ -236,7 +224,7 @@ const syncPlatformData = async (userId, platform, username) => {
       }
     }
 
-    // Recalculate total_solved summary column across ALL platforms
+    // Recalculate summary totals across all platforms inside coding_profiles
     await pool.query(
       `
       UPDATE coding_profiles
@@ -253,23 +241,28 @@ const syncPlatformData = async (userId, platform, username) => {
 
     return result.data;
   } catch (error) {
-    console.error(`❌ Failed to sync ${platform} for user ${userId}:`, error.message);
+    console.error(`❌ Detailed error syncing ${platform} for user ${userId}:`, error);
+    return null;
   }
-  return null;
 };
 
 // =========================
-// Save Connections & Auto-Fetch Profile Data
+// Connect Platforms & Auto-Fetch Stats
 // =========================
 export const connectPlatforms = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized access" });
+    }
+
     const { github, leetcode, codeforces, codechef, gfg } = req.body;
 
-    // 1. Save or update platform connections
+    // Save/Update connection usernames inside coding_profiles
     await pool.query(
       `
-      INSERT INTO platform_connections (
+      INSERT INTO coding_profiles (
         user_id, github_username, leetcode_username, codeforces_username,
         codechef_username, geeksforgeeks_username, github_connected,
         leetcode_connected, codeforces_connected, codechef_connected, gfg_connected, updated_at
@@ -303,7 +296,7 @@ export const connectPlatforms = async (req, res) => {
       ]
     );
 
-    // 2. Fetch platform metrics concurrently
+    // Concurrently trigger platform fetch & update
     const platformsToFetch = [
       { name: "github", username: github },
       { name: "leetcode", username: leetcode },
@@ -316,20 +309,24 @@ export const connectPlatforms = async (req, res) => {
       .filter((p) => Boolean(p.username))
       .map((p) => syncPlatformData(userId, p.name, p.username));
 
-    await Promise.all(syncPromises);
+    await Promise.allSettled(syncPromises);
 
-    res.json({
+    return res.status(200).json({
       success: true,
       message: "Platforms connected and coding profiles updated!",
     });
   } catch (err) {
-    console.error("Platform Connection Error:", err);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    console.error("❌ Platform Connection Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server internal error while connecting platforms.",
+      error: err.message,
+    });
   }
 };
 
 // =========================
-// Manual Refresh for Single Platform
+// Manual Single Platform Refresh
 // =========================
 export const runPlatformScript = async (req, res) => {
   const { platform, username } = req.body;
@@ -348,33 +345,28 @@ export const runPlatformScript = async (req, res) => {
 
     return res.status(200).json({ success: true, data: fetchedData });
   } catch (error) {
-    console.error("❌ Python Service Error:", error);
-    return res.status(500).json({ error: "Failed to connect to Python backend." });
+    console.error("❌ Single script execution error:", error);
+    return res.status(500).json({ error: "Failed to fetch platform profile." });
   }
 };
 
 // =========================
-// Get Platform Connections & Coding Profile Stats
+// Get Platform Connections & Profile Stats
 // =========================
 export const getPlatforms = async (req, res) => {
   try {
-    const connections = await pool.query(
-      "SELECT * FROM platform_connections WHERE user_id=$1",
-      [req.user.id]
-    );
-
     const profile = await pool.query(
       "SELECT * FROM coding_profiles WHERE user_id=$1",
       [req.user.id]
     );
 
-    res.json({
+    return res.json({
       success: true,
-      connections: connections.rows[0] || {},
+      connections: profile.rows[0] || {},
       profile: profile.rows[0] || {},
     });
   } catch (err) {
     console.error("Get Platforms Error:", err);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
