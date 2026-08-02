@@ -1,16 +1,36 @@
-import { Resend } from "resend";
+import * as Brevo from "@getbrevo/brevo";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const apiInstance = new Brevo.TransactionalEmailsApi();
+
+// Set API Key
+apiInstance.setApiKey(
+  Brevo.TransactionalEmailsApiApiKeys.apiKey,
+  process.env.BREVO_API_KEY
+);
 
 const sendEmail = async (email, subject, html) => {
-  await resend.emails.send({
-    from: "UnifyCode <onboarding@resend.dev>",
-    to: email,
-    subject,
-    html,
-  });
+  try {
+    const sendSmtpEmail = new Brevo.SendSmtpEmail();
 
-  console.log("✅ Email Sent");
+    sendSmtpEmail.subject = subject;
+    sendSmtpEmail.htmlContent = html;
+    sendSmtpEmail.sender = {
+      name: "UnifyCode",
+      email: "srinivas.sunkara.2006@gmail.com", // MUST match your verified Brevo sender
+    };
+    sendSmtpEmail.to = [{ email: email }];
+
+    console.log(`📡 Sending email via Brevo to ${email}...`);
+
+    // Await the API response
+    const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    
+    console.log("✅ Brevo API Full Response:", JSON.stringify(response, null, 2));
+    return response;
+  } catch (error) {
+    console.error("❌ BREVO ERROR DETAILS:", error.response?.body || error.message || error);
+    throw error;
+  }
 };
 
 export default sendEmail;
