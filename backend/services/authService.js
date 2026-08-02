@@ -1,6 +1,6 @@
 import pool from "../config/database.js";
 import bcrypt from "bcrypt";
-
+import crypto from "crypto";
 export const checkUserExists = async (email) => {
     const result = await pool.query(
         "SELECT * FROM users WHERE email = $1",

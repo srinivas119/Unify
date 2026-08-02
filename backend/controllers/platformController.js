@@ -26,25 +26,30 @@ export const connectPlatforms = async (req, res) => {
         `
         UPDATE platform_connections
         SET
-          github_username=$1,
-          leetcode_username=$2,
-          codeforces_username=$3,
-          codechef_username=$4,
-          geeksforgeeks_username=$5,
-          github_connected=true,
-          leetcode_connected=true,
-          codeforces_connected=true,
-          codechef_connected=true,
-          gfg_connected=true,
-          updated_at=NOW()
-        WHERE user_id=$6
+          github_username = $1,
+          leetcode_username = $2,
+          codeforces_username = $3,
+          codechef_username = $4,
+          geeksforgeeks_username = $5,
+          github_connected = $6,
+          leetcode_connected = $7,
+          codeforces_connected = $8,
+          codechef_connected = $9,
+          gfg_connected = $10,
+          updated_at = NOW()
+        WHERE user_id = $11
         `,
         [
-          github,
-          leetcode,
-          codeforces,
-          codechef,
-          gfg,
+          github || null,
+          leetcode || null,
+          codeforces || null,
+          codechef || null,
+          gfg || null,
+          Boolean(github),
+          Boolean(leetcode),
+          Boolean(codeforces),
+          Boolean(codechef),
+          Boolean(gfg),
           userId,
         ]
       );
@@ -66,15 +71,20 @@ export const connectPlatforms = async (req, res) => {
           gfg_connected
         )
         VALUES
-        ($1,$2,$3,$4,$5,$6,true,true,true,true,true)
+        ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         `,
         [
           userId,
-          github,
-          leetcode,
-          codeforces,
-          codechef,
-          gfg,
+          github || null,
+          leetcode || null,
+          codeforces || null,
+          codechef || null,
+          gfg || null,
+          Boolean(github),
+          Boolean(leetcode),
+          Boolean(codeforces),
+          Boolean(codechef),
+          Boolean(gfg),
         ]
       );
     }
@@ -84,7 +94,7 @@ export const connectPlatforms = async (req, res) => {
       message: "Platforms Saved Successfully",
     });
   } catch (err) {
-    console.log(err);
+    console.error("Platform Connection Error:", err);
 
     res.status(500).json({
       success: false,
@@ -109,7 +119,7 @@ export const getPlatforms = async (req, res) => {
       data: result.rows[0] || {},
     });
   } catch (err) {
-    console.log(err);
+    console.error("Get Platforms Error:", err);
 
     res.status(500).json({
       success: false,
