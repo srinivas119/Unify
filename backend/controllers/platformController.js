@@ -252,6 +252,9 @@ const syncPlatformData = async (userId, platform, username) => {
 // =========================
 // Connect Platforms & Auto-Fetch Stats
 // =========================
+// =========================
+// Connect Platforms & Auto-Fetch Stats
+// =========================
 export const connectPlatforms = async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -260,14 +263,21 @@ export const connectPlatforms = async (req, res) => {
       return res.status(401).json({ success: false, message: "Unauthorized access" });
     }
 
-    // Normalize input key names across naming conventions
-    const github = req.body.github || req.body.githubUsername || req.body.github_username || null;
-    const leetcode = req.body.leetcode || req.body.leetcodeUsername || req.body.leetcode_username || null;
-    const codeforces = req.body.codeforces || req.body.codeforcesUsername || req.body.codeforces_username || null;
-    const codechef = req.body.codechef || req.body.codechefUsername || req.body.codechef_username || null;
-    const gfg = req.body.gfg || req.body.geeksforgeeks || req.body.gfgUsername || req.body.geeksforgeeks_username || null;
+    // Helper to convert empty strings, whitespace, or missing fields into actual NULLs
+    const cleanVal = (val) => {
+      if (!val || typeof val !== "string") return null;
+      const trimmed = val.trim();
+      return trimmed === "" ? null : trimmed;
+    };
 
-    // COALESCE ensures existing stored usernames in PostgreSQL are not overwritten with NULL
+    // Normalize input fields across various naming conventions
+    const github = cleanVal(req.body.github || req.body.githubUsername || req.body.github_username);
+    const leetcode = cleanVal(req.body.leetcode || req.body.leetcodeUsername || req.body.leetcode_username);
+    const codeforces = cleanVal(req.body.codeforces || req.body.codeforcesUsername || req.body.codeforces_username);
+    const codechef = cleanVal(req.body.codechef || req.body.codechefUsername || req.body.codechef_username);
+    const gfg = cleanVal(req.body.gfg || req.body.geeksforgeeks || req.body.gfgUsername || req.body.geeksforgeeks_username);
+
+    // COALESCE preserves previously saved usernames if a blank/null value is sent in subsequent requests
     await pool.query(
       `
       INSERT INTO coding_profiles (
@@ -303,6 +313,35 @@ export const connectPlatforms = async (req, res) => {
         Boolean(gfg),
       ]
     );
+
+    // Fetch metric updates concurrently for each configured platform username
+    const platformsToFetch = [
+      { name: "github", username: github },
+      { name: "leetcode", username: leetcode },
+      { name: "codeforces", username: codeforces },
+      { name: "codechef", username: codechef },
+      { name: "gfg", username: gfg },
+    ];
+
+    const syncPromises = platformsToFetch
+      .filter((p) => Boolean(p.username))
+      .map((p) => syncPlatformData(userId, p.name, p.username));
+
+    await Promise.allSettled(syncPromises);
+
+    return res.status(200).json({
+      success: true,
+      message: "Platforms connected and coding profiles updated!",
+    });
+  } catch (err) {
+    console.error("❌ Platform Connection Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server internal error while connecting platforms.",
+      error: err.message,
+    });
+  }
+};
 
     // Fetch metric updates concurrently for each configured platform username
     const platformsToFetch = [
