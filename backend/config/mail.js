@@ -5,7 +5,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const sendEmail = async (email, subject, html) => {
   try {
     const data = await resend.emails.send({
-      from: "UnifyCode <onboarding@resend.dev>",
+      from: "srinivas.sunkara.2006@gmail.com",
       to: email,
       subject,
       html,
