@@ -4,185 +4,212 @@ const PYTHON_SERVICE_URL =
   process.env.PYTHON_SERVICE_URL || "https://python-service-k16u.onrender.com";
 
 /**
- * Helper to fetch data from Python service and update individual columns in `coding_profiles`
+ * Safe conversion helpers to prevent NaN/null issues in PostgreSQL
+ */
+const safeInt = (val) => {
+  if (val === null || val === undefined) return 0;
+  const parsed = parseInt(val, 10);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
+const safeFloat = (val) => {
+  if (val === null || val === undefined) return 0;
+  const parsed = parseFloat(val);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
+/**
+ * Helper to fetch data from Python service and atomic UPSERT into `coding_profiles`
  */
 const syncPlatformData = async (userId, platform, username) => {
-  if (!username) return;
+  if (!username) return null;
 
   try {
     const response = await fetch(
       `${PYTHON_SERVICE_URL}/fetch/${encodeURIComponent(platform)}/${encodeURIComponent(username)}`
     );
 
-    const result = await response.json();
-
-    if (response.ok && result.data) {
-      const data = result.data;
-
-      // 1. Ensure a profile row exists for this user_id
-      await pool.query(
-        `
-        INSERT INTO coding_profiles (user_id, updated_at)
-        VALUES ($1, NOW())
-        ON CONFLICT (user_id) DO NOTHING
-        `,
-        [userId]
-      );
-
-      // 2. Map fetched Python fields to exact PostgreSQL table columns based on platform
-      switch (platform.toLowerCase()) {
-        case "github":
-          await pool.query(
-            `
-            UPDATE coding_profiles
-            SET
-              github_repositories = COALESCE($1, github_repositories),
-              github_followers = COALESCE($2, github_followers),
-              github_following = COALESCE($3, github_following),
-              github_contributions = COALESCE($4, github_contributions),
-              github_commits = COALESCE($5, github_commits),
-              github_streak = COALESCE($6, github_streak),
-              github_languages = COALESCE($7, github_languages),
-              updated_at = NOW()
-            WHERE user_id = $8
-            `,
-            [
-              data.repositories || data.repos || 0,
-              data.followers || 0,
-              data.following || 0,
-              data.contributions || 0,
-              data.commits || 0,
-              data.streak || 0,
-              JSON.stringify(data.languages || {}),
-              userId,
-            ]
-          );
-          break;
-
-        case "leetcode":
-          await pool.query(
-            `
-            UPDATE coding_profiles
-            SET
-              leetcode_solved = COALESCE($1, leetcode_solved),
-              leetcode_easy = COALESCE($2, leetcode_easy),
-              leetcode_medium = COALESCE($3, leetcode_medium),
-              leetcode_hard = COALESCE($4, leetcode_hard),
-              leetcode_rating = COALESCE($5, leetcode_rating),
-              leetcode_acceptance = COALESCE($6, leetcode_acceptance),
-              leetcode_ranking = COALESCE($7, leetcode_ranking),
-              leetcode_contests = COALESCE($8, leetcode_contests),
-              leetcode_streak = COALESCE($9, leetcode_streak),
-              updated_at = NOW()
-            WHERE user_id = $10
-            `,
-            [
-              data.solved || data.total_solved || 0,
-              data.easy || 0,
-              data.medium || 0,
-              data.hard || 0,
-              data.rating || 0,
-              data.acceptance || 0,
-              data.ranking || 0,
-              data.contests || 0,
-              data.streak || 0,
-              userId,
-            ]
-          );
-          break;
-
-        case "codeforces":
-          await pool.query(
-            `
-            UPDATE coding_profiles
-            SET
-              codeforces_rating = COALESCE($1, codeforces_rating),
-              codeforces_max_rating = COALESCE($2, codeforces_max_rating),
-              codeforces_rank = COALESCE($3, codeforces_rank),
-              codeforces_contests = COALESCE($4, codeforces_contests),
-              codeforces_total = COALESCE($5, codeforces_total),
-              updated_at = NOW()
-            WHERE user_id = $6
-            `,
-            [
-              data.rating || 0,
-              data.max_rating || data.maxRating || 0,
-              data.rank || null,
-              data.contests || 0,
-              data.total || data.solved || 0,
-              userId,
-            ]
-          );
-          break;
-
-        case "codechef":
-          await pool.query(
-            `
-            UPDATE coding_profiles
-            SET
-              codechef_rating = COALESCE($1, codechef_rating),
-              codechef_highest_rating = COALESCE($2, codechef_highest_rating),
-              codechef_stars = COALESCE($3, codechef_stars),
-              codechef_total = COALESCE($4, codechef_total),
-              updated_at = NOW()
-            WHERE user_id = $5
-            `,
-            [
-              data.rating || 0,
-              data.highest_rating || data.highestRating || 0,
-              data.stars || null,
-              data.total || data.solved || 0,
-              userId,
-            ]
-          );
-          break;
-
-        case "gfg":
-          await pool.query(
-            `
-            UPDATE coding_profiles
-            SET
-              gfg_score = COALESCE($1, gfg_score),
-              gfg_total = COALESCE($2, gfg_total),
-              gfg_easy = COALESCE($3, gfg_easy),
-              gfg_medium = COALESCE($4, gfg_medium),
-              gfg_hard = COALESCE($5, gfg_hard),
-              gfg_institute_rank = COALESCE($6, gfg_institute_rank),
-              updated_at = NOW()
-            WHERE user_id = $7
-            `,
-            [
-              data.score || 0,
-              data.total || data.solved || 0,
-              data.easy || 0,
-              data.medium || 0,
-              data.hard || 0,
-              data.institute_rank || data.rank || 0,
-              userId,
-            ]
-          );
-          break;
-      }
-
-      // 3. Recalculate total_solved across all platforms
-      await pool.query(
-        `
-        UPDATE coding_profiles
-        SET total_solved = (
-          COALESCE(leetcode_solved, 0) + 
-          COALESCE(codeforces_total, 0) + 
-          COALESCE(codechef_total, 0) + 
-          COALESCE(gfg_total, 0)
-        )
-        WHERE user_id = $1
-        `,
-        [userId]
-      );
-
-      return result.data;
+    if (!response.ok) {
+      console.error(`❌ Python service returned HTTP ${response.status} for ${platform}`);
+      return null;
     }
+
+    const result = await response.json();
+    if (!result || !result.data) {
+      console.warn(`⚠️ No data payload returned for platform: ${platform}`);
+      return null;
+    }
+
+    const data = result.data;
+
+    // Atomic UPSERT based on platform
+    switch (platform.toLowerCase()) {
+      case "github":
+        await pool.query(
+          `
+          INSERT INTO coding_profiles (
+            user_id, github_repositories, github_followers, github_following,
+            github_contributions, github_commits, github_streak, github_languages, updated_at
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+          ON CONFLICT (user_id) DO UPDATE SET
+            github_repositories = EXCLUDED.github_repositories,
+            github_followers = EXCLUDED.github_followers,
+            github_following = EXCLUDED.github_following,
+            github_contributions = EXCLUDED.github_contributions,
+            github_commits = EXCLUDED.github_commits,
+            github_streak = EXCLUDED.github_streak,
+            github_languages = EXCLUDED.github_languages,
+            updated_at = NOW();
+          `,
+          [
+            userId,
+            safeInt(data.repositories || data.repos),
+            safeInt(data.followers),
+            safeInt(data.following),
+            safeInt(data.contributions),
+            safeInt(data.commits),
+            safeInt(data.streak),
+            data.languages || {}, // Pass raw object for JSONB column
+          ]
+        );
+        break;
+
+      case "leetcode":
+        await pool.query(
+          `
+          INSERT INTO coding_profiles (
+            user_id, leetcode_solved, leetcode_easy, leetcode_medium, leetcode_hard,
+            leetcode_rating, leetcode_acceptance, leetcode_ranking, leetcode_contests, leetcode_streak, updated_at
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+          ON CONFLICT (user_id) DO UPDATE SET
+            leetcode_solved = EXCLUDED.leetcode_solved,
+            leetcode_easy = EXCLUDED.leetcode_easy,
+            leetcode_medium = EXCLUDED.leetcode_medium,
+            leetcode_hard = EXCLUDED.leetcode_hard,
+            leetcode_rating = EXCLUDED.leetcode_rating,
+            leetcode_acceptance = EXCLUDED.leetcode_acceptance,
+            leetcode_ranking = EXCLUDED.leetcode_ranking,
+            leetcode_contests = EXCLUDED.leetcode_contests,
+            leetcode_streak = EXCLUDED.leetcode_streak,
+            updated_at = NOW();
+          `,
+          [
+            userId,
+            safeInt(data.solved || data.total_solved),
+            safeInt(data.easy),
+            safeInt(data.medium),
+            safeInt(data.hard),
+            safeInt(data.rating),
+            safeFloat(data.acceptance),
+            safeInt(data.ranking),
+            safeInt(data.contests),
+            safeInt(data.streak),
+          ]
+        );
+        break;
+
+      case "codeforces":
+        await pool.query(
+          `
+          INSERT INTO coding_profiles (
+            user_id, codeforces_rating, codeforces_max_rating, codeforces_rank,
+            codeforces_contests, codeforces_total, updated_at
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, NOW())
+          ON CONFLICT (user_id) DO UPDATE SET
+            codeforces_rating = EXCLUDED.codeforces_rating,
+            codeforces_max_rating = EXCLUDED.codeforces_max_rating,
+            codeforces_rank = EXCLUDED.codeforces_rank,
+            codeforces_contests = EXCLUDED.codeforces_contests,
+            codeforces_total = EXCLUDED.codeforces_total,
+            updated_at = NOW();
+          `,
+          [
+            userId,
+            safeInt(data.rating),
+            safeInt(data.max_rating || data.maxRating),
+            data.rank || null,
+            safeInt(data.contests),
+            safeInt(data.total || data.solved),
+          ]
+        );
+        break;
+
+      case "codechef":
+        await pool.query(
+          `
+          INSERT INTO coding_profiles (
+            user_id, codechef_rating, codechef_highest_rating, codechef_stars,
+            codechef_total, updated_at
+          )
+          VALUES ($1, $2, $3, $4, $5, NOW())
+          ON CONFLICT (user_id) DO UPDATE SET
+            codechef_rating = EXCLUDED.codechef_rating,
+            codechef_highest_rating = EXCLUDED.codechef_highest_rating,
+            codechef_stars = EXCLUDED.codechef_stars,
+            codechef_total = EXCLUDED.codechef_total,
+            updated_at = NOW();
+          `,
+          [
+            userId,
+            safeInt(data.rating),
+            safeInt(data.highest_rating || data.highestRating),
+            data.stars || null,
+            safeInt(data.total || data.solved),
+          ]
+        );
+        break;
+
+      case "gfg":
+        await pool.query(
+          `
+          INSERT INTO coding_profiles (
+            user_id, gfg_score, gfg_total, gfg_easy, gfg_medium,
+            gfg_hard, gfg_institute_rank, updated_at
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+          ON CONFLICT (user_id) DO UPDATE SET
+            gfg_score = EXCLUDED.gfg_score,
+            gfg_total = EXCLUDED.gfg_total,
+            gfg_easy = EXCLUDED.gfg_easy,
+            gfg_medium = EXCLUDED.gfg_medium,
+            gfg_hard = EXCLUDED.gfg_hard,
+            gfg_institute_rank = EXCLUDED.gfg_institute_rank,
+            updated_at = NOW();
+          `,
+          [
+            userId,
+            safeInt(data.score),
+            safeInt(data.total || data.solved),
+            safeInt(data.easy),
+            safeInt(data.medium),
+            safeInt(data.hard),
+            safeInt(data.institute_rank || data.rank),
+          ]
+        );
+        break;
+    }
+
+    // Recalculate total_solved across platforms
+    await pool.query(
+      `
+      UPDATE coding_profiles
+      SET total_solved = (
+        COALESCE(leetcode_solved, 0) + 
+        COALESCE(codeforces_total, 0) + 
+        COALESCE(codechef_total, 0) + 
+        COALESCE(gfg_total, 0)
+      )
+      WHERE user_id = $1;
+      `,
+      [userId]
+    );
+
+    return result.data;
   } catch (error) {
-    console.error(`❌ Failed to sync ${platform} for user ${userId}:`, error);
+    console.error(`❌ Failed to sync ${platform} for user ${userId}:`, error.message);
   }
   return null;
 };
@@ -195,81 +222,44 @@ export const connectPlatforms = async (req, res) => {
     const userId = req.user.id;
     const { github, leetcode, codeforces, codechef, gfg } = req.body;
 
-    // 1. Save connections
-    const existing = await pool.query(
-      "SELECT * FROM platform_connections WHERE user_id=$1",
-      [userId]
+    // 1. Save or update platform connections
+    await pool.query(
+      `
+      INSERT INTO platform_connections (
+        user_id, github_username, leetcode_username, codeforces_username,
+        codechef_username, geeksforgeeks_username, github_connected,
+        leetcode_connected, codeforces_connected, codechef_connected, gfg_connected, updated_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
+      ON CONFLICT (user_id) DO UPDATE SET
+        github_username = EXCLUDED.github_username,
+        leetcode_username = EXCLUDED.leetcode_username,
+        codeforces_username = EXCLUDED.codeforces_username,
+        codechef_username = EXCLUDED.codechef_username,
+        geeksforgeeks_username = EXCLUDED.geeksforgeeks_username,
+        github_connected = EXCLUDED.github_connected,
+        leetcode_connected = EXCLUDED.leetcode_connected,
+        codeforces_connected = EXCLUDED.codeforces_connected,
+        codechef_connected = EXCLUDED.codechef_connected,
+        gfg_connected = EXCLUDED.gfg_connected,
+        updated_at = NOW();
+      `,
+      [
+        userId,
+        github || null,
+        leetcode || null,
+        codeforces || null,
+        codechef || null,
+        gfg || null,
+        Boolean(github),
+        Boolean(leetcode),
+        Boolean(codeforces),
+        Boolean(codechef),
+        Boolean(gfg),
+      ]
     );
 
-    if (existing.rows.length > 0) {
-      await pool.query(
-        `
-        UPDATE platform_connections
-        SET
-          github_username = $1,
-          leetcode_username = $2,
-          codeforces_username = $3,
-          codechef_username = $4,
-          geeksforgeeks_username = $5,
-          github_connected = $6,
-          leetcode_connected = $7,
-          codeforces_connected = $8,
-          codechef_connected = $9,
-          gfg_connected = $10,
-          updated_at = NOW()
-        WHERE user_id = $11
-        `,
-        [
-          github || null,
-          leetcode || null,
-          codeforces || null,
-          codechef || null,
-          gfg || null,
-          Boolean(github),
-          Boolean(leetcode),
-          Boolean(codeforces),
-          Boolean(codechef),
-          Boolean(gfg),
-          userId,
-        ]
-      );
-    } else {
-      await pool.query(
-        `
-        INSERT INTO platform_connections
-        (
-          user_id,
-          github_username,
-          leetcode_username,
-          codeforces_username,
-          codechef_username,
-          geeksforgeeks_username,
-          github_connected,
-          leetcode_connected,
-          codeforces_connected,
-          codechef_connected,
-          gfg_connected
-        )
-        VALUES
-        ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-        `,
-        [
-          userId,
-          github || null,
-          leetcode || null,
-          codeforces || null,
-          codechef || null,
-          gfg || null,
-          Boolean(github),
-          Boolean(leetcode),
-          Boolean(codeforces),
-          Boolean(codechef),
-          Boolean(gfg),
-        ]
-      );
-    }
-
-    // 2. Concurrently fetch and populate coding_profiles table columns
+    // 2. Fetch platform metrics concurrently
     const platformsToFetch = [
       { name: "github", username: github },
       { name: "leetcode", username: leetcode },
