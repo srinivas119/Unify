@@ -1,32 +1,29 @@
-import nodemailer from "nodemailer";
+import * as Brevo from "@getbrevo/brevo";
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true, // SSL
-  pool: true,   // Keep connection open
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false // Prevents cloud IP SSL handshake failures
-  }
-});
+// Initialize Brevo API Instance
+const apiInstance = new Brevo.TransactionalEmailsApi();
+apiInstance.setApiKey(
+  Brevo.TransactionalEmailsApiApiKeys.apiKey,
+  process.env.BREVO_API_KEY
+);
 
 const sendEmail = async (email, subject, html) => {
   try {
-    const info = await transporter.sendMail({
-      from: `"UnifyCode" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject,
-      html,
-    });
+    const sendSmtpEmail = new Brevo.SendSmtpEmail();
 
-    console.log(`✅ Email sent successfully to ${email}. MessageID: ${info.messageId}`);
-    return info;
+    sendSmtpEmail.subject = subject;
+    sendSmtpEmail.htmlContent = html;
+    sendSmtpEmail.sender = {
+      name: "UnifyCode",
+      email: process.env.EMAIL_USER || "srinivas.sunkara.2006@gmail.com",
+    };
+    sendSmtpEmail.to = [{ email: email }];
+
+    const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log(`✅ Email sent via Brevo to ${email}. Message ID:`, data.messageId);
+    return data;
   } catch (error) {
-    console.error(`❌ Failed to send email to ${email}:`, error);
+    console.error(`❌ Brevo email failure for ${email}:`, error.response?.body || error.message);
     throw error;
   }
 };
