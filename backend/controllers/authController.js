@@ -51,8 +51,11 @@ export const signup = async (req, res) => {
             ]
         );
 
-        const link = `https://unify-pink.vercel.app/verify-email?token=${verificationToken}`;
+        // Dynamic Client URL with fallback
+        const clientUrl = process.env.CLIENT_URL || "https://unify-pink.vercel.app";
+        const link = `${clientUrl}/verify-email?token=${verificationToken}`;
 
+        // ✅ FIXED: Added `await` so Nodemailer finishes sending before responding
         await sendEmail(
             email,
             "Verify your UnifyCode Account",
@@ -79,7 +82,6 @@ export const signup = async (req, res) => {
 
 export const verifyEmail = async (req, res) => {
     try {
-        // Accepts token from route params (/verify/:token) OR query string (/verify?token=...)
         const token = req.params.token || req.query.token;
 
         if (!token) {
