@@ -343,34 +343,7 @@ export const connectPlatforms = async (req, res) => {
   }
 };
 
-    // Fetch metric updates concurrently for each configured platform username
-    const platformsToFetch = [
-      { name: "github", username: github },
-      { name: "leetcode", username: leetcode },
-      { name: "codeforces", username: codeforces },
-      { name: "codechef", username: codechef },
-      { name: "gfg", username: gfg },
-    ];
 
-    const syncPromises = platformsToFetch
-      .filter((p) => Boolean(p.username))
-      .map((p) => syncPlatformData(userId, p.name, p.username));
-
-    await Promise.allSettled(syncPromises);
-
-    return res.status(200).json({
-      success: true,
-      message: "Platforms connected and coding profiles updated!",
-    });
-  } catch (err) {
-    console.error("❌ Platform Connection Error:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Server internal error while connecting platforms.",
-      error: err.message,
-    });
-  }
-};
 
 // =========================
 // Manual Single Platform Refresh
