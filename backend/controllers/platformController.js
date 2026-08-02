@@ -3,7 +3,9 @@ import pool from "../config/database.js";
 const PYTHON_SERVICE_URL =
   process.env.PYTHON_SERVICE_URL || "https://python-service-k16u.onrender.com";
 
-// Helper function to fetch data from Python service and save to DB
+/**
+ * Helper to fetch data from Python service and update `coding_profiles` table
+ */
 const syncPlatformData = async (userId, platform, username) => {
   if (!username) return null;
 
@@ -15,14 +17,13 @@ const syncPlatformData = async (userId, platform, username) => {
     const result = await response.json();
 
     if (response.ok && result.data) {
-      // ⚠️ UPDATE OR INSERT INTO YOUR PLATFORM STATS TABLE
-      // Adjust table name and JSON payload handling as needed by your schema
+      // Upsert stats into your existing coding_profiles table
       await pool.query(
         `
-        INSERT INTO platform_stats (user_id, platform, stats, updated_at)
+        INSERT INTO coding_profiles (user_id, platform, profile_data, updated_at)
         VALUES ($1, $2, $3, NOW())
         ON CONFLICT (user_id, platform) 
-        DO UPDATE SET stats = $3, updated_at = NOW()
+        DO UPDATE SET profile_data = $3, updated_at = NOW()
         `,
         [userId, platform.toLowerCase(), JSON.stringify(result.data)]
       );
@@ -36,21 +37,14 @@ const syncPlatformData = async (userId, platform, username) => {
 };
 
 // =========================
-// Save & Auto-Fetch Platform Stats
+// Save Connections & Auto-Fetch Stats
 // =========================
 export const connectPlatforms = async (req, res) => {
   try {
     const userId = req.user.id;
+    const { github, leetcode, codeforces, codechef, gfg } = req.body;
 
-    const {
-      github,
-      leetcode,
-      codeforces,
-      codechef,
-      gfg,
-    } = req.body;
-
-    // 1. Save/Update platform usernames in PostgreSQL
+    // 1. Save/Update platform usernames in platform_connections
     const existing = await pool.query(
       "SELECT * FROM platform_connections WHERE user_id=$1",
       [userId]
@@ -124,7 +118,7 @@ export const connectPlatforms = async (req, res) => {
       );
     }
 
-    // 2. Fetch fresh data from Python Service in parallel
+    // 2. Concurrently fetch fresh platform stats from Python
     const platformsToFetch = [
       { name: "github", username: github },
       { name: "leetcode", username: leetcode },
@@ -137,20 +131,15 @@ export const connectPlatforms = async (req, res) => {
       .filter((p) => Boolean(p.username))
       .map((p) => syncPlatformData(userId, p.name, p.username));
 
-    // Wait for all active fetchers to complete
     await Promise.all(syncPromises);
 
     res.json({
       success: true,
-      message: "Platforms saved and stats updated successfully!",
+      message: "Platforms saved and profile stats updated successfully!",
     });
   } catch (err) {
     console.error("Platform Connection Error:", err);
-
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-    });
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
@@ -174,13 +163,13 @@ export const runPlatformScript = async (req, res) => {
 
     return res.status(200).json({ success: true, data: fetchedData });
   } catch (error) {
-    console.error("❌ Python Service Connection Error:", error);
-    return res.status(500).json({ error: "Failed to connect to Python backend service." });
+    console.error("❌ Python Service Error:", error);
+    return res.status(500).json({ error: "Failed to connect to Python backend." });
   }
 };
 
 // =========================
-// Get Platform Usernames & Stats
+// Get Platform Usernames & Coding Profiles
 // =========================
 export const getPlatforms = async (req, res) => {
   try {
@@ -189,23 +178,18 @@ export const getPlatforms = async (req, res) => {
       [req.user.id]
     );
 
-    // Also fetch saved stats for dashboard rendering
-    const stats = await pool.query(
-      "SELECT platform, stats FROM platform_stats WHERE user_id=$1",
+    const profiles = await pool.query(
+      "SELECT platform, profile_data, updated_at FROM coding_profiles WHERE user_id=$1",
       [req.user.id]
     );
 
     res.json({
       success: true,
-      data: connections.rows[0] || {},
-      stats: stats.rows || [],
+      connections: connections.rows[0] || {},
+      profiles: profiles.rows || [],
     });
   } catch (err) {
     console.error("Get Platforms Error:", err);
-
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-    });
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
