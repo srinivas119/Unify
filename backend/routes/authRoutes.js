@@ -18,7 +18,9 @@ router.post("/login", login);
 router.post("/logout", logout);
 
 // Email Verification (Supports query params & dynamic URL segments)
-router.get("/verify/:token?", verifyEmail);
+// Handles both /verify?token=XYZ and /verify/XYZ
+router.get("/verify/:token", verifyEmail);
+router.get("/verify", verifyEmail);
 
 // Logged In User
 router.get("/me", protect, getCurrentUser);
