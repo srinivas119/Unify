@@ -44,7 +44,14 @@ const syncPlatformData = async (userId, platform, username) => {
 
     // Atomic UPSERT based on platform
     switch (platform.toLowerCase()) {
-      case "github":
+      case "github": {
+        const repositories = safeInt(data.repositories || data.repos || data.public_repos);
+        const followers = safeInt(data.followers);
+        const following = safeInt(data.following);
+        const contributions = safeInt(data.contributions || data.total_contributions);
+        const commits = safeInt(data.commits || data.total_commits);
+        const streak = safeInt(data.streak || data.current_streak);
+
         await pool.query(
           `
           INSERT INTO coding_profiles (
@@ -64,18 +71,27 @@ const syncPlatformData = async (userId, platform, username) => {
           `,
           [
             userId,
-            safeInt(data.repositories || data.repos),
-            safeInt(data.followers),
-            safeInt(data.following),
-            safeInt(data.contributions),
-            safeInt(data.commits),
-            safeInt(data.streak),
-            data.languages || {}, // Pass raw object for JSONB column
+            repositories,
+            followers,
+            following,
+            contributions,
+            commits,
+            streak,
+            data.languages || {}, // Raw object for JSONB
           ]
         );
         break;
+      }
 
-      case "leetcode":
+      case "leetcode": {
+        const easy = safeInt(data.easy || data.easy_solved);
+        const medium = safeInt(data.medium || data.medium_solved);
+        const hard = safeInt(data.hard || data.hard_solved);
+
+        // Fallback: Calculate total solved if payload returns 0 or missing key
+        const totalLeetCodeSolved =
+          safeInt(data.solved || data.total_solved || data.solved_count) || (easy + medium + hard);
+
         await pool.query(
           `
           INSERT INTO coding_profiles (
@@ -97,20 +113,29 @@ const syncPlatformData = async (userId, platform, username) => {
           `,
           [
             userId,
-            safeInt(data.solved || data.total_solved),
-            safeInt(data.easy),
-            safeInt(data.medium),
-            safeInt(data.hard),
+            totalLeetCodeSolved,
+            easy,
+            medium,
+            hard,
             safeInt(data.rating),
-            safeFloat(data.acceptance),
-            safeInt(data.ranking),
-            safeInt(data.contests),
+            safeFloat(data.acceptance || data.acceptance_rate),
+            safeInt(data.ranking || data.global_ranking),
+            safeInt(data.contests || data.attended_contests),
             safeInt(data.streak),
           ]
         );
         break;
+      }
 
-      case "codeforces":
+      case "codeforces": {
+        const easy = safeInt(data.easy || data.easy_solved);
+        const medium = safeInt(data.medium || data.medium_solved);
+        const hard = safeInt(data.hard || data.hard_solved);
+
+        // Fallback: If 'total' or 'solved' isn't explicitly provided, fallback to sum or 0
+        const totalCodeforcesSolved =
+          safeInt(data.total || data.solved || data.total_solved) || (easy + medium + hard);
+
         await pool.query(
           `
           INSERT INTO coding_profiles (
@@ -132,12 +157,21 @@ const syncPlatformData = async (userId, platform, username) => {
             safeInt(data.max_rating || data.maxRating),
             data.rank || null,
             safeInt(data.contests),
-            safeInt(data.total || data.solved),
+            totalCodeforcesSolved,
           ]
         );
         break;
+      }
 
-      case "codechef":
+      case "codechef": {
+        const easy = safeInt(data.easy || data.easy_solved);
+        const medium = safeInt(data.medium || data.medium_solved);
+        const hard = safeInt(data.hard || data.hard_solved);
+
+        // Fallback: Calculate total solved if payload omits 'total'
+        const totalCodechefSolved =
+          safeInt(data.total || data.solved || data.total_solved) || (easy + medium + hard);
+
         await pool.query(
           `
           INSERT INTO coding_profiles (
@@ -157,12 +191,21 @@ const syncPlatformData = async (userId, platform, username) => {
             safeInt(data.rating),
             safeInt(data.highest_rating || data.highestRating),
             data.stars || null,
-            safeInt(data.total || data.solved),
+            totalCodechefSolved,
           ]
         );
         break;
+      }
 
-      case "gfg":
+      case "gfg": {
+        const easy = safeInt(data.easy || data.easy_solved);
+        const medium = safeInt(data.medium || data.medium_solved);
+        const hard = safeInt(data.hard || data.hard_solved);
+
+        // Fallback: Calculate total solved if payload omits 'total'
+        const totalGfgSolved =
+          safeInt(data.total || data.solved || data.total_solved) || (easy + medium + hard);
+
         await pool.query(
           `
           INSERT INTO coding_profiles (
@@ -181,18 +224,19 @@ const syncPlatformData = async (userId, platform, username) => {
           `,
           [
             userId,
-            safeInt(data.score),
-            safeInt(data.total || data.solved),
-            safeInt(data.easy),
-            safeInt(data.medium),
-            safeInt(data.hard),
-            safeInt(data.institute_rank || data.rank),
+            safeInt(data.score || data.overall_score),
+            totalGfgSolved,
+            easy,
+            medium,
+            hard,
+            safeInt(data.institute_rank || data.rank || data.college_rank),
           ]
         );
         break;
+      }
     }
 
-    // Recalculate total_solved across platforms
+    // Recalculate total_solved summary column across ALL platforms
     await pool.query(
       `
       UPDATE coding_profiles
