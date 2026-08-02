@@ -3,6 +3,9 @@ import pool from "../config/database.js";
 const PYTHON_SERVICE_URL =
   process.env.PYTHON_SERVICE_URL || "https://python-service-k16u.onrender.com";
 
+/**
+ * Safe conversion helpers to prevent NaN/null issues in PostgreSQL
+ */
 const safeInt = (val) => {
   if (val === null || val === undefined) return 0;
   const parsed = parseInt(val, 10);
@@ -224,7 +227,7 @@ const syncPlatformData = async (userId, platform, username) => {
       }
     }
 
-    // Recalculate summary totals across all platforms inside coding_profiles
+    // Recalculate total_solved summary column across all platforms
     await pool.query(
       `
       UPDATE coding_profiles
@@ -257,9 +260,14 @@ export const connectPlatforms = async (req, res) => {
       return res.status(401).json({ success: false, message: "Unauthorized access" });
     }
 
-    const { github, leetcode, codeforces, codechef, gfg } = req.body;
+    // Normalize input key names across naming conventions
+    const github = req.body.github || req.body.githubUsername || req.body.github_username || null;
+    const leetcode = req.body.leetcode || req.body.leetcodeUsername || req.body.leetcode_username || null;
+    const codeforces = req.body.codeforces || req.body.codeforcesUsername || req.body.codeforces_username || null;
+    const codechef = req.body.codechef || req.body.codechefUsername || req.body.codechef_username || null;
+    const gfg = req.body.gfg || req.body.geeksforgeeks || req.body.gfgUsername || req.body.geeksforgeeks_username || null;
 
-    // Save/Update connection usernames inside coding_profiles
+    // COALESCE ensures existing stored usernames in PostgreSQL are not overwritten with NULL
     await pool.query(
       `
       INSERT INTO coding_profiles (
@@ -269,25 +277,25 @@ export const connectPlatforms = async (req, res) => {
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
       ON CONFLICT (user_id) DO UPDATE SET
-        github_username = EXCLUDED.github_username,
-        leetcode_username = EXCLUDED.leetcode_username,
-        codeforces_username = EXCLUDED.codeforces_username,
-        codechef_username = EXCLUDED.codechef_username,
-        geeksforgeeks_username = EXCLUDED.geeksforgeeks_username,
-        github_connected = EXCLUDED.github_connected,
-        leetcode_connected = EXCLUDED.leetcode_connected,
-        codeforces_connected = EXCLUDED.codeforces_connected,
-        codechef_connected = EXCLUDED.codechef_connected,
-        gfg_connected = EXCLUDED.gfg_connected,
+        github_username = COALESCE(EXCLUDED.github_username, coding_profiles.github_username),
+        leetcode_username = COALESCE(EXCLUDED.leetcode_username, coding_profiles.leetcode_username),
+        codeforces_username = COALESCE(EXCLUDED.codeforces_username, coding_profiles.codeforces_username),
+        codechef_username = COALESCE(EXCLUDED.codechef_username, coding_profiles.codechef_username),
+        geeksforgeeks_username = COALESCE(EXCLUDED.geeksforgeeks_username, coding_profiles.geeksforgeeks_username),
+        github_connected = CASE WHEN EXCLUDED.github_username IS NOT NULL THEN TRUE ELSE coding_profiles.github_connected END,
+        leetcode_connected = CASE WHEN EXCLUDED.leetcode_username IS NOT NULL THEN TRUE ELSE coding_profiles.leetcode_connected END,
+        codeforces_connected = CASE WHEN EXCLUDED.codeforces_username IS NOT NULL THEN TRUE ELSE coding_profiles.codeforces_connected END,
+        codechef_connected = CASE WHEN EXCLUDED.codechef_username IS NOT NULL THEN TRUE ELSE coding_profiles.codechef_connected END,
+        gfg_connected = CASE WHEN EXCLUDED.geeksforgeeks_username IS NOT NULL THEN TRUE ELSE coding_profiles.gfg_connected END,
         updated_at = NOW();
       `,
       [
         userId,
-        github || null,
-        leetcode || null,
-        codeforces || null,
-        codechef || null,
-        gfg || null,
+        github,
+        leetcode,
+        codeforces,
+        codechef,
+        gfg,
         Boolean(github),
         Boolean(leetcode),
         Boolean(codeforces),
@@ -296,7 +304,7 @@ export const connectPlatforms = async (req, res) => {
       ]
     );
 
-    // Concurrently trigger platform fetch & update
+    // Fetch metric updates concurrently for each configured platform username
     const platformsToFetch = [
       { name: "github", username: github },
       { name: "leetcode", username: leetcode },
