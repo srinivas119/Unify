@@ -34,43 +34,45 @@ const useDashboard = () => {
 
                     },
 
-                    codingScore: {
+                   codingScore: {
 
-                        total:
-                            (data.leetcode_solved || 0) +
-                            (data.github_repositories || 0) +
-                            (data.gfg_score || 0),
+    total:
+        (data.leetcode_solved || 0) +
+        (data.github_repositories || 0) +
+        (data.codechef_total || 0) +
+        (data.codeforces_total || 0) +
+        (data.gfg_total || 0),
 
-                        platforms: [
+    platforms: [
 
-                            {
-                                name: "GitHub",
-                                solved: data.github_repositories || 0
-                            },
+        {
+            name: "GitHub",
+            solved: data.github_repositories || 0
+        },
 
-                            {
-                                name: "LeetCode",
-                                solved: data.leetcode_solved || 0
-                            },
+        {
+            name: "LeetCode",
+            solved: data.leetcode_solved || 0
+        },
 
-                            {
-                                name: "Codeforces",
-                                solved: data.codeforces_total || 0
-                            },
+        {
+            name: "CodeChef",
+            solved: data.codechef_total || 0
+        },
 
-                            {
-                                name: "CodeChef",
-                                solved: data.codechef_total || 0
-                            },
+        {
+            name: "Codeforces",
+            solved: data.codeforces_total || 0
+        },
 
-                            {
-                                name: "GeeksforGeeks",
-                                solved: data.gfg_total || 0
-                            }
+        {
+            name: "GeeksforGeeks",
+            solved: data.gfg_total || 0
+        }
 
-                        ]
+    ]
 
-                    },
+},
 
                     github: {
 
