@@ -125,7 +125,7 @@ const useDashboard = () => {
                     },
 
                  codechef: {
-    total: data.codechef_solved || 0,
+    total: data.codechef_total || 0,
 
     easy: data.codechef_easy || 0,
     medium: data.codechef_medium || 0,
