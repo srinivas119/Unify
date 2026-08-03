@@ -181,7 +181,7 @@ const syncPlatformData = async (userId, platform, username) => {
         await pool.query(
           `
           INSERT INTO coding_profiles (
-            user_id, codechef_solved, codechef_easy, codechef_medium, codechef_hard,
+            user_id, codechef_total, codechef_easy, codechef_medium, codechef_hard,
             codechef_rating, codechef_highest_rating, codechef_stars, updated_at
           )
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
