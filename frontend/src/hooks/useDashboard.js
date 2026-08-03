@@ -60,7 +60,7 @@ const useDashboard = () => {
 
                             {
                                 name: "CodeChef",
-                                solved: data.codechef_total || 0
+                                solved: data.codechef_solved || 0
                             },
 
                             {
@@ -124,18 +124,17 @@ const useDashboard = () => {
 
                     },
 
-                    codechef: {
+                 codechef: {
+    total: data.codechef_solved || 0,
 
-                        total: data.codechef_total || 0,
+    easy: data.codechef_easy || 0,
+    medium: data.codechef_medium || 0,
+    hard: data.codechef_hard || 0,
 
-                        rating: data.codechef_rating || 0,
-
-                        highestRating: data.codechef_highest_rating || 0,
-
-                        stars: data.codechef_stars || "N/A"
-
-                    },
-
+    rating: data.codechef_rating || 0,
+    highestRating: data.codechef_highest_rating || 0,
+    stars: data.codechef_stars || "N/A"
+},
                     geeksforgeeks: {
 
                         total: data.gfg_total || 0,
