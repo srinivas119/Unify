@@ -60,7 +60,7 @@ const useDashboard = () => {
 
                             {
                                 name: "CodeChef",
-                                solved: data.codechef_solved || 0
+                                solved: data.codechef_total || 0
                             },
 
                             {
