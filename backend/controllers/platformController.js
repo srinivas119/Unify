@@ -169,13 +169,16 @@ const syncPlatformData = async (userId, platform, username) => {
           `
           INSERT INTO coding_profiles (
             user_id, codechef_rating, codechef_highest_rating, codechef_stars,
-            codechef_total, updated_at
+            codechef_easy, codechef_medium, codechef_hard, codechef_total, updated_at
           )
-          VALUES ($1, $2, $3, $4, $5, NOW())
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
           ON CONFLICT (user_id) DO UPDATE SET
             codechef_rating = EXCLUDED.codechef_rating,
             codechef_highest_rating = EXCLUDED.codechef_highest_rating,
             codechef_stars = EXCLUDED.codechef_stars,
+            codechef_easy = EXCLUDED.codechef_easy,
+            codechef_medium = EXCLUDED.codechef_medium,
+            codechef_hard = EXCLUDED.codechef_hard,
             codechef_total = EXCLUDED.codechef_total,
             updated_at = NOW();
           `,
@@ -184,11 +187,15 @@ const syncPlatformData = async (userId, platform, username) => {
             safeInt(data.rating),
             safeInt(data.highest_rating || data.highestRating),
             data.stars || null,
+            easy,
+            medium,
+            hard,
             totalCodechefSolved,
           ]
         );
         break;
       }
+        
 
       case "gfg": {
         const easy = safeInt(data.easy || data.easy_solved);
