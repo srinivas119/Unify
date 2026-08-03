@@ -153,12 +153,31 @@ const useDashboard = () => {
 
                     },
 
-                  platforms: {
-    github: data.github_connected && data.github_username,
-    leetcode: data.leetcode_connected && data.leetcode_username,
-    codeforces: data.codeforces_connected && data.codeforces_username,
-    codechef: data.codechef_connected && data.codechef_username,
-    gfg: data.gfg_connected && data.geeksforgeeks_username
+                 platforms: {
+    github: {
+        connected: data.github_connected,
+        username: data.github_username,
+    },
+
+    leetcode: {
+        connected: data.leetcode_connected,
+        username: data.leetcode_username,
+    },
+
+    codeforces: {
+        connected: data.codeforces_connected,
+        username: data.codeforces_username,
+    },
+
+    codechef: {
+        connected: data.codechef_connected,
+        username: data.codechef_username,
+    },
+
+    gfg: {
+        connected: data.gfg_connected,
+        username: data.geeksforgeeks_username,
+    }
 }
 
                 });
