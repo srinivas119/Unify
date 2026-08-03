@@ -13,6 +13,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 function App() {
   return (
     <Routes>
+
       <Route path="/login" element={<Login />} />
 
       <Route path="/signup" element={<Signup />} />
@@ -53,10 +54,11 @@ function App() {
         }
       />
 
-     <Route
-  path="/verify-email"
-  element={<VerifyEmail />}
-/>
+      <Route
+        path="/verify-email"
+        element={<VerifyEmail />}
+      />
+
     </Routes>
   );
 }
