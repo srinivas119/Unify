@@ -297,41 +297,72 @@ export const connectPlatforms = async (req, res) => {
     const gfg = cleanVal(req.body.gfg || req.body.geeksforgeeks || req.body.gfgUsername || req.body.geeksforgeeks_username);
 
     // COALESCE preserves previously saved usernames if a blank/null value is sent in subsequent requests
-    await pool.query(
-      `
-      INSERT INTO coding_profiles (
-        user_id, github_username, leetcode_username, codeforces_username,
-        codechef_username, geeksforgeeks_username, github_connected,
-        leetcode_connected, codeforces_connected, codechef_connected, gfg_connected, updated_at
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
-      ON CONFLICT (user_id) DO UPDATE SET
-        github_username = COALESCE(EXCLUDED.github_username, coding_profiles.github_username),
-        leetcode_username = COALESCE(EXCLUDED.leetcode_username, coding_profiles.leetcode_username),
-        codeforces_username = COALESCE(EXCLUDED.codeforces_username, coding_profiles.codeforces_username),
-        codechef_username = COALESCE(EXCLUDED.codechef_username, coding_profiles.codechef_username),
-        geeksforgeeks_username = COALESCE(EXCLUDED.geeksforgeeks_username, coding_profiles.geeksforgeeks_username),
-        github_connected = CASE WHEN EXCLUDED.github_username IS NOT NULL THEN TRUE ELSE coding_profiles.github_connected END,
-        leetcode_connected = CASE WHEN EXCLUDED.leetcode_username IS NOT NULL THEN TRUE ELSE coding_profiles.leetcode_connected END,
-        codeforces_connected = CASE WHEN EXCLUDED.codeforces_username IS NOT NULL THEN TRUE ELSE coding_profiles.codeforces_connected END,
-        codechef_connected = CASE WHEN EXCLUDED.codechef_username IS NOT NULL THEN TRUE ELSE coding_profiles.codechef_connected END,
-        gfg_connected = CASE WHEN EXCLUDED.geeksforgeeks_username IS NOT NULL THEN TRUE ELSE coding_profiles.gfg_connected END,
-        updated_at = NOW();
-      `,
-      [
-        userId,
-        github,
-        leetcode,
-        codeforces,
-        codechef,
-        gfg,
-        Boolean(github),
-        Boolean(leetcode),
-        Boolean(codeforces),
-        Boolean(codechef),
-        Boolean(gfg),
-      ]
-    );
+await pool.query(
+  `
+  INSERT INTO platform_connections (
+    user_id,
+    github_username,
+    leetcode_username,
+    codeforces_username,
+    codechef_username,
+    geeksforgeeks_username,
+    github_connected,
+    leetcode_connected,
+    codeforces_connected,
+    codechef_connected,
+    gfg_connected,
+    updated_at
+  )
+  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW())
+  ON CONFLICT (user_id) DO UPDATE SET
+
+    github_username = COALESCE(EXCLUDED.github_username, platform_connections.github_username),
+    leetcode_username = COALESCE(EXCLUDED.leetcode_username, platform_connections.leetcode_username),
+    codeforces_username = COALESCE(EXCLUDED.codeforces_username, platform_connections.codeforces_username),
+    codechef_username = COALESCE(EXCLUDED.codechef_username, platform_connections.codechef_username),
+    geeksforgeeks_username = COALESCE(EXCLUDED.geeksforgeeks_username, platform_connections.geeksforgeeks_username),
+
+    github_connected = CASE
+      WHEN EXCLUDED.github_username IS NOT NULL THEN TRUE
+      ELSE platform_connections.github_connected
+    END,
+
+    leetcode_connected = CASE
+      WHEN EXCLUDED.leetcode_username IS NOT NULL THEN TRUE
+      ELSE platform_connections.leetcode_connected
+    END,
+
+    codeforces_connected = CASE
+      WHEN EXCLUDED.codeforces_username IS NOT NULL THEN TRUE
+      ELSE platform_connections.codeforces_connected
+    END,
+
+    codechef_connected = CASE
+      WHEN EXCLUDED.codechef_username IS NOT NULL THEN TRUE
+      ELSE platform_connections.codechef_connected
+    END,
+
+    gfg_connected = CASE
+      WHEN EXCLUDED.geeksforgeeks_username IS NOT NULL THEN TRUE
+      ELSE platform_connections.gfg_connected
+    END,
+
+    updated_at = NOW();
+  `,
+  [
+    userId,
+    github,
+    leetcode,
+    codeforces,
+    codechef,
+    gfg,
+    Boolean(github),
+    Boolean(leetcode),
+    Boolean(codeforces),
+    Boolean(codechef),
+    Boolean(gfg),
+  ]
+);
 
     // Fetch metric updates concurrently for each configured platform username
     const platformsToFetch = [
