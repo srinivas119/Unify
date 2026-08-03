@@ -62,11 +62,17 @@ export const getDashboardData = async (userId) => {
             cp.gfg_score,
             cp.gfg_institute_rank,
 
-            pc.github_connected,
-            pc.leetcode_connected,
-            pc.codeforces_connected,
-            pc.codechef_connected,
-            pc.gfg_connected
+           pc.github_connected,
+pc.leetcode_connected,
+pc.codeforces_connected,
+pc.codechef_connected,
+pc.gfg_connected,
+
+pc.github_username,
+pc.leetcode_username,
+pc.codeforces_username,
+pc.codechef_username,
+pc.geeksforgeeks_username
 
         FROM users u
 
