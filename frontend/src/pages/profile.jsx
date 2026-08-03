@@ -301,3 +301,318 @@ function Profile() {
                     </div>
 
                 </div>
+                {/* EDUCATION DETAILS */}
+
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 mb-8">
+
+                    <div className="flex items-center gap-3 mb-8">
+
+                        <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+
+                            <GraduationCap className="text-purple-400"/>
+
+                        </div>
+
+                        <div>
+
+                            <h2 className="text-2xl font-semibold">
+
+                                Education
+
+                            </h2>
+
+                            <p className="text-slate-400">
+
+                                Academic Information
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6">
+
+                        <div>
+
+                            <label className="flex items-center gap-2 mb-2">
+
+                                <Building2 size={16}/>
+
+                                College
+
+                            </label>
+
+                            <input
+
+                                name="college"
+
+                                value={profile.college || ""}
+
+                                onChange={handleChange}
+
+                                disabled={!isEditing}
+
+                                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3"
+
+                            />
+
+                        </div>
+
+                        <div>
+
+                            <label className="flex items-center gap-2 mb-2">
+
+                                <BookOpen size={16}/>
+
+                                Branch
+
+                            </label>
+
+                            <input
+
+                                name="branch"
+
+                                value={profile.branch || ""}
+
+                                onChange={handleChange}
+
+                                disabled={!isEditing}
+
+                                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3"
+
+                            />
+
+                        </div>
+
+                        <div>
+
+                            <label className="flex items-center gap-2 mb-2">
+
+                                <Award size={16}/>
+
+                                Year Of Study
+
+                            </label>
+
+                            <input
+
+                                name="year_of_study"
+
+                                value={profile.year_of_study || ""}
+
+                                onChange={handleChange}
+
+                                disabled={!isEditing}
+
+                                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3"
+
+                            />
+
+                        </div>
+
+                        <div>
+
+                            <label className="flex items-center gap-2 mb-2">
+
+                                <Target size={16}/>
+
+                                Location
+
+                            </label>
+
+                            <input
+
+                                name="location"
+
+                                value={profile.location || ""}
+
+                                onChange={handleChange}
+
+                                disabled={!isEditing}
+
+                                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3"
+
+                            />
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {/* ABOUT */}
+
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 mb-8">
+
+                    <div className="flex items-center gap-3 mb-8">
+
+                        <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
+
+                            <Briefcase className="text-green-400"/>
+
+                        </div>
+
+                        <div>
+
+                            <h2 className="text-2xl font-semibold">
+
+                                About
+
+                            </h2>
+
+                            <p className="text-slate-400">
+
+                                Tell others about yourself
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <textarea
+
+                        rows={5}
+
+                        name="bio"
+
+                        value={profile.bio || ""}
+
+                        onChange={handleChange}
+
+                        disabled={!isEditing}
+
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3"
+
+                    />
+
+                </div>
+
+                {/* LINKS */}
+
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 mb-8">
+
+                    <h2 className="text-2xl font-semibold mb-8">
+
+                        Social Links
+
+                    </h2>
+
+                    <div className="grid md:grid-cols-3 gap-6">
+
+                        <input
+
+                            placeholder="GitHub URL"
+
+                            name="github_url"
+
+                            value={profile.github_url || ""}
+
+                            onChange={handleChange}
+
+                            disabled={!isEditing}
+
+                            className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3"
+
+                        />
+
+                        <input
+
+                            placeholder="LinkedIn URL"
+
+                            name="linkedin_url"
+
+                            value={profile.linkedin_url || ""}
+
+                            onChange={handleChange}
+
+                            disabled={!isEditing}
+
+                            className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3"
+
+                        />
+
+                        <input
+
+                            placeholder="Website"
+
+                            name="website_url"
+
+                            value={profile.website_url || ""}
+
+                            onChange={handleChange}
+
+                            disabled={!isEditing}
+
+                            className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3"
+
+                        />
+
+                    </div>
+
+                </div>
+
+                {
+
+                    isEditing &&
+
+                    <div className="flex justify-end">
+
+                        <button
+
+                            onClick={async()=>{
+
+                                try{
+
+                                    await api.put("/profile",profile);
+
+                                    setSaved(true);
+
+                                    setIsEditing(false);
+
+                                    setTimeout(()=>{
+
+                                        setSaved(false);
+
+                                    },3000);
+
+                                }
+
+                                catch(err){
+
+                                    console.log(err);
+
+                                }
+
+                            }}
+
+                            className="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+
+                        >
+
+                            <Save size={18}/>
+
+                            Save Profile
+
+                        </button>
+
+                    </div>
+
+                }
+
+            </main>
+
+            <footer className="border-t border-slate-800 text-center py-8 text-slate-500">
+
+                © {new Date().getFullYear()} UnifyCode
+
+            </footer>
+
+        </div>
+
+    );
+
+}
+
+export default Profile;
