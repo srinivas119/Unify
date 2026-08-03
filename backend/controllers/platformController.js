@@ -158,12 +158,31 @@ const syncPlatformData = async (userId, platform, username) => {
         break;
       }
 
-      case "codechef": {
-        const easy = safeInt(data.easy || data.easy_solved);
-        const medium = safeInt(data.medium || data.medium_solved);
-        const hard = safeInt(data.hard || data.hard_solved);
-        const totalCodechefSolved =
-          safeInt(data.total || data.solved || data.total_solved) || (easy + medium + hard);
+  
+        case "codechef": {
+        const totalCodechefSolved = safeInt(data.total || data.solved || data.total_solved);
+
+        // Problem counts per difficulty rating pool (Easy: 115, Medium: 156, Hard: 194 -> Total: 465)
+        const poolEasy = 115;
+        const poolMedium = 156;
+        const poolHard = 194;
+        const poolTotal = poolEasy + poolMedium + poolHard; 
+
+        // Calculate percentage weights based on difficulty rating pools
+        let easy = 0;
+        let medium = 0;
+        let hard = 0;
+
+        if (totalCodechefSolved > 0 && poolTotal > 0) {
+          const easyPercentage = poolEasy / poolTotal;       // ~24.73%
+          const mediumPercentage = poolMedium / poolTotal;   // ~33.55%
+
+          easy = Math.round(totalCodechefSolved * easyPercentage);
+          medium = Math.round(totalCodechefSolved * mediumPercentage);
+          
+          // Assign the remaining count to hard to guarantee the sum matches totalCodechefSolved precisely
+          hard = Math.max(0, totalCodechefSolved - (easy + medium));
+        }
 
         await pool.query(
           `
@@ -195,7 +214,6 @@ const syncPlatformData = async (userId, platform, username) => {
         );
         break;
       }
-        
 
       case "gfg": {
         const easy = safeInt(data.easy || data.easy_solved);
