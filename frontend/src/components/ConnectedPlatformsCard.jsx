@@ -1,17 +1,16 @@
 import styles from "../pages/Dashboard.module.css";
 
 const ConnectedPlatformsCard = ({ platforms }) => {
-
   const connected = [
-    { name: "GitHub", connected: platforms?.github },
-    { name: "LeetCode", connected: platforms?.leetcode },
-    { name: "Codeforces", connected: platforms?.codeforces },
-    { name: "CodeChef", connected: platforms?.codechef },
-    { name: "GeeksforGeeks", connected: platforms?.gfg },
+    { name: "GitHub", value: platforms?.github },
+    { name: "LeetCode", value: platforms?.leetcode },
+    { name: "Codeforces", value: platforms?.codeforces },
+    { name: "CodeChef", value: platforms?.codechef },
+    { name: "GeeksforGeeks", value: platforms?.gfg },
   ];
 
   const totalConnected = connected.filter(
-    (platform) => platform.connected
+    (platform) => platform.value
   ).length;
 
   return (
@@ -22,13 +21,31 @@ const ConnectedPlatformsCard = ({ platforms }) => {
         {totalConnected} / {connected.length} Connected
       </p>
 
-      <ul className={styles.platformList}>
+      <div className={styles.platformStatusList}>
         {connected.map((platform) => (
-          <li key={platform.name}>
-            {platform.connected ? "✅" : "❌"} {platform.name}
-          </li>
+          <div key={platform.name} className={styles.platformStatusItem}>
+            <div>
+              <strong>{platform.name}</strong>
+
+              {platform.value && (
+                <p className={styles.username}>
+                  @{platform.value}
+                </p>
+              )}
+            </div>
+
+            <span
+              className={
+                platform.value
+                  ? styles.connected
+                  : styles.notConnected
+              }
+            >
+              {platform.value ? "Connected" : "Not Connected"}
+            </span>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 };
