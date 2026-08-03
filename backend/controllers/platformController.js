@@ -160,56 +160,50 @@ const syncPlatformData = async (userId, platform, username) => {
 
   
         case "codechef": {
-        const totalCodechefSolved = safeInt(data.total || data.solved || data.total_solved);
+        const easy = safeInt(data.easy || data.easy_solved);
+        const medium = safeInt(data.medium || data.medium_solved);
+        const hard = safeInt(data.hard || data.hard_solved);
+        
+        let totalCodechefSolved = safeInt(data.total || data.solved || data.total_solved) || (easy + medium + hard);
 
-        // Problem counts per difficulty rating pool (Easy: 115, Medium: 156, Hard: 194 -> Total: 465)
-        const poolEasy = 115;
-        const poolMedium = 156;
-        const poolHard = 194;
-        const poolTotal = poolEasy + poolMedium + poolHard; 
+        // If explicit easy/medium/hard counts aren't passed, fall back to the percentage pool calculation
+        if (easy === 0 && medium === 0 && hard === 0 && totalCodechefSolved > 0) {
+          const poolEasy = 115;
+          const poolMedium = 156;
+          const poolHard = 194;
+          const poolTotal = poolEasy + poolMedium + poolHard;
 
-        // Calculate percentage weights based on difficulty rating pools
-        let easy = 0;
-        let medium = 0;
-        let hard = 0;
-
-        if (totalCodechefSolved > 0 && poolTotal > 0) {
-          const easyPercentage = poolEasy / poolTotal;       // ~24.73%
-          const mediumPercentage = poolMedium / poolTotal;   // ~33.55%
-
-          easy = Math.round(totalCodechefSolved * easyPercentage);
-          medium = Math.round(totalCodechefSolved * mediumPercentage);
-          
-          // Assign the remaining count to hard to guarantee the sum matches totalCodechefSolved precisely
+          easy = Math.round(totalCodechefSolved * (poolEasy / poolTotal));
+          medium = Math.round(totalCodechefSolved * (poolMedium / poolTotal));
           hard = Math.max(0, totalCodechefSolved - (easy + medium));
         }
 
         await pool.query(
           `
           INSERT INTO coding_profiles (
-            user_id, codechef_rating, codechef_highest_rating, codechef_stars,
-            codechef_easy, codechef_medium, codechef_hard, codechef_total, updated_at
+            user_id, codechef_solved, codechef_easy, codechef_medium, codechef_hard,
+            codechef_rating, codechef_highest_rating, codechef_stars, updated_at
           )
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
           ON CONFLICT (user_id) DO UPDATE SET
-            codechef_rating = EXCLUDED.codechef_rating,
-            codechef_highest_rating = EXCLUDED.codechef_highest_rating,
-            codechef_stars = EXCLUDED.codechef_stars,
+            codechef_solved = EXCLUDED.codechef_solved,
             codechef_easy = EXCLUDED.codechef_easy,
             codechef_medium = EXCLUDED.codechef_medium,
             codechef_hard = EXCLUDED.codechef_hard,
-            codechef_total = EXCLUDED.codechef_total,
+            codechef_rating = EXCLUDED.codechef_rating,
+            codechef_highest_rating = EXCLUDED.codechef_highest_rating,
+            codechef_stars = EXCLUDED.codechef_stars,
             updated_at = NOW();
           `,
           [
             userId,
-            safeInt(data.rating),
-            safeInt(data.highest_rating || data.highestRating),
-            data.stars || null,
+            totalCodechefSolved,
             easy,
             medium,
             hard,
-            totalCodechefSolved,
+            safeInt(data.rating),
+            safeInt(data.highest_rating || data.highestRating),
+            data.stars || null,
           ]
         );
         break;
