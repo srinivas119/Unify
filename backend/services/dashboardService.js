@@ -51,6 +51,9 @@ export const getDashboardData = async (userId) => {
             cp.codechef_highest_rating,
             cp.codechef_stars,
             cp.codechef_total,
+            cp.codechef_easy,      <!-- Added -->
+            cp.codechef_medium,    <!-- Added -->
+            cp.codechef_hard,      <!-- Added -->
 
             cp.gfg_total,
             cp.gfg_easy,
