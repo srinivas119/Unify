@@ -8,7 +8,13 @@ import {
   Legend,
 } from "recharts";
 
-const COLORS = ["#3B82F6", "#F59E0B", "#10B981", "#EF4444"];
+const COLORS = [
+  "#24292F", // GitHub (official dark gray)
+  "#FFA116", // LeetCode
+  "#1F8ACB", // Codeforces
+  "#5B4638", // CodeChef
+  "#2F8D46", // GeeksforGeeks
+];
 
 const QuickStats = ({ codingScore }) => {
   return (
