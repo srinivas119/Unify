@@ -2,15 +2,30 @@ import styles from "../pages/Dashboard.module.css";
 
 const ConnectedPlatformsCard = ({ platforms }) => {
   const connected = [
-    { name: "GitHub", value: platforms?.github },
-    { name: "LeetCode", value: platforms?.leetcode },
-    { name: "Codeforces", value: platforms?.codeforces },
-    { name: "CodeChef", value: platforms?.codechef },
-    { name: "GeeksforGeeks", value: platforms?.gfg },
+    {
+      name: "GitHub",
+      data: platforms?.github,
+    },
+    {
+      name: "LeetCode",
+      data: platforms?.leetcode,
+    },
+    {
+      name: "Codeforces",
+      data: platforms?.codeforces,
+    },
+    {
+      name: "CodeChef",
+      data: platforms?.codechef,
+    },
+    {
+      name: "GeeksforGeeks",
+      data: platforms?.gfg,
+    },
   ];
 
   const totalConnected = connected.filter(
-    (platform) => platform.value
+    (platform) => platform.data?.connected
   ).length;
 
   return (
@@ -23,25 +38,30 @@ const ConnectedPlatformsCard = ({ platforms }) => {
 
       <div className={styles.platformStatusList}>
         {connected.map((platform) => (
-          <div key={platform.name} className={styles.platformStatusItem}>
+          <div
+            key={platform.name}
+            className={styles.platformStatusItem}
+          >
             <div>
               <strong>{platform.name}</strong>
 
-              {platform.value && (
+              {platform.data?.connected && (
                 <p className={styles.username}>
-                  @{platform.value}
+                  @{platform.data.username}
                 </p>
               )}
             </div>
 
             <span
               className={
-                platform.value
+                platform.data?.connected
                   ? styles.connected
                   : styles.notConnected
               }
             >
-              {platform.value ? "Connected" : "Not Connected"}
+              {platform.data?.connected
+                ? "🟢 Connected"
+                : "🔴 Not Connected"}
             </span>
           </div>
         ))}
