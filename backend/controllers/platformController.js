@@ -142,6 +142,7 @@ const syncPlatformData = async (userId, platform, username) => {
         const totalCodeforcesSolved =
           safeInt(data.total || data.solved || data.total_solved) || (easy + medium + hard);
 
+       
         await pool.query(
           `
           INSERT INTO coding_profiles (
@@ -168,7 +169,6 @@ const syncPlatformData = async (userId, platform, username) => {
         );
         break;
       }
-
   
         case "codechef": {
         let easy = safeInt(data.easy || data.easy_solved);
