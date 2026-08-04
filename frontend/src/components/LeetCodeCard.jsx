@@ -114,8 +114,4 @@ const LeetCodeCard = ({ data }) => {
 };
 
 export default LeetCodeCard;
-</div>
-  );
-};
 
-export default LeetCodeCard;
