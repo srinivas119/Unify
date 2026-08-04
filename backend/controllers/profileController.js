@@ -60,7 +60,7 @@ export const updateProfile = async (req, res) => {
         console.error("Update Profile Error:", err);
         return res.status(500).json({
             success: false,
-            message: "Failed to save profile data",
+            message: err.message || "Failed to save profile data",
             error: err.message
         });
     }
