@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../services/api";
+import { useToast } from "../context/ToastContext";
 
 function ResetPassword() {
+  const { error: toastError, success: toastSuccess } = useToast();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
   const navigate = useNavigate();
@@ -12,8 +14,6 @@ function ResetPassword() {
     confirmPassword: "",
   });
 
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -25,16 +25,14 @@ function ResetPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
-    setError("");
 
     if (!token) {
-      setError("Invalid or missing reset token.");
+      toastError("Invalid Token", "Missing reset token in URL.");
       return;
     }
 
     if (form.newPassword !== form.confirmPassword) {
-      setError("Passwords do not match.");
+      toastError("Mismatch", "Passwords do not match.");
       return;
     }
 
@@ -46,14 +44,14 @@ function ResetPassword() {
         newPassword: form.newPassword,
       });
 
-      setMessage(res.data.message);
+      toastSuccess("Success", res.data.message);
       
       setTimeout(() => {
         navigate("/login");
       }, 3000);
       
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to reset password");
+      toastError("Failed", err.response?.data?.message || "Failed to reset password");
     } finally {
       setIsLoading(false);
     }
@@ -73,19 +71,7 @@ function ResetPassword() {
           Create new password
         </p>
 
-        {message && (
-          <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500 text-green-400 p-3 text-sm">
-            {message}
-          </div>
-        )}
-
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500 text-red-400 p-3 text-sm">
-            {error}
-          </div>
-        )}
-
-        {!token && !error && (
+        {!token && (
             <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500 text-red-400 p-3 text-sm">
             Missing reset token in URL.
           </div>

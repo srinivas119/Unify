@@ -1,24 +1,22 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
+import { useToast } from "../context/ToastContext";
 
 function ForgotPassword() {
+  const { error: toastError, success: toastSuccess } = useToast();
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
-    setError("");
     setIsLoading(true);
 
     try {
       const res = await api.post("/auth/forgot-password", { email });
-      setMessage(res.data.message);
+      toastSuccess("Reset Link Sent", res.data.message);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to send reset link");
+      toastError("Failed", err.response?.data?.message || "Failed to send reset link");
     } finally {
       setIsLoading(false);
     }
@@ -37,19 +35,6 @@ function ForgotPassword() {
         <p className="text-center text-slate-400 mt-2 mb-8">
           Reset your password
         </p>
-
-        {message && (
-          <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500 text-green-400 p-3 text-sm">
-            {message}
-            <p className="mt-1 font-semibold text-xs">Don't forget to check your spam/junk folder!</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500 text-red-400 p-3 text-sm">
-            {error}
-          </div>
-        )}
 
         <div className="space-y-5">
           <input

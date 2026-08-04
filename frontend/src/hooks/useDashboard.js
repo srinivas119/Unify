@@ -3,14 +3,14 @@ import api from "../services/api";
 
 const useDashboard = () => {
 
-    const [dashboard, setDashboard] = useState({});
+    const [dashboard, setDashboard] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    useEffect(() => {
-
-        const fetchDashboard = async () => {
-
-            try {
+    const fetchDashboard = async () => {
+        setLoading(true);
+        setError(null);
+        try {
 
                 const response = await api.get("/dashboard");
 
@@ -183,24 +183,22 @@ const useDashboard = () => {
                 });
 
             } catch (err) {
-
                 console.error(err);
-
+                setError(err.response?.data?.message || "Failed to load dashboard data.");
             } finally {
-
                 setLoading(false);
-
             }
-
         };
 
+    useEffect(() => {
         fetchDashboard();
-
     }, []);
 
     return {
         dashboard,
-        loading
+        loading,
+        error,
+        refetch: fetchDashboard
     };
 
 };

@@ -22,22 +22,33 @@ const safeFloat = (val) => {
  * Fetch data from Python service & atomic UPSERT into `coding_profiles`
  */
 const syncPlatformData = async (userId, platform, username) => {
-  if (!username) return null;
+  if (!username) return { success: false, error: "INVALID_USERNAME" };
 
   try {
-    const response = await fetch(
-      `${PYTHON_SERVICE_URL}/fetch/${encodeURIComponent(platform)}/${encodeURIComponent(username)}`
-    );
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
+    const response = await fetch(
+      `${PYTHON_SERVICE_URL}/fetch/${encodeURIComponent(platform)}/${encodeURIComponent(username)}`,
+      { signal: controller.signal }
+    );
+    clearTimeout(timeoutId);
+
+    if (response.status === 404) {
+       return { success: false, error: "INVALID_USERNAME" };
+    }
+    if (response.status === 429) {
+       return { success: false, error: "RATE_LIMIT" };
+    }
     if (!response.ok) {
       console.error(`❌ Python service returned HTTP ${response.status} for ${platform}`);
-      return null;
+      return { success: false, error: "SERVER_ERROR" };
     }
 
     const result = await response.json();
     if (!result || !result.data) {
       console.warn(`⚠️ No payload returned for platform: ${platform}`);
-      return null;
+      return { success: false, error: "SERVER_ERROR" };
     }
 
     const data = result.data;
@@ -261,10 +272,13 @@ const syncPlatformData = async (userId, platform, username) => {
       [userId]
     );
 
-    return result.data;
+    return { success: true, data: result.data };
   } catch (error) {
+    if (error.name === 'AbortError') {
+       return { success: false, error: "TIMEOUT" };
+    }
     console.error(`❌ Detailed error syncing ${platform} for user ${userId}:`, error);
-    return null;
+    return { success: false, error: "SERVER_ERROR" };
   }
 };
 
@@ -414,27 +428,63 @@ for (const platform of platformsToFetch) {
 
 
 // =========================
-// Manual Single Platform Refresh
+// Single Platform Update / Edit
 // =========================
-export const runPlatformScript = async (req, res) => {
+export const updatePlatformUsername = async (req, res) => {
   const { platform, username } = req.body;
   const userId = req.user?.id;
 
   if (!platform || !username) {
-    return res.status(400).json({ error: "Platform and username are required." });
+    return res.status(400).json({ success: false, error: "INVALID_USERNAME", message: "Platform and username are required." });
+  }
+
+  // Define valid platforms and their corresponding DB columns
+  const platformColumns = {
+    github: { user: 'github_username', connected: 'github_connected' },
+    leetcode: { user: 'leetcode_username', connected: 'leetcode_connected' },
+    codeforces: { user: 'codeforces_username', connected: 'codeforces_connected' },
+    codechef: { user: 'codechef_username', connected: 'codechef_connected' },
+    geeksforgeeks: { user: 'geeksforgeeks_username', connected: 'gfg_connected' },
+    gfg: { user: 'geeksforgeeks_username', connected: 'gfg_connected' }, // alias
+  };
+
+  const dbPlat = platformColumns[platform.toLowerCase()];
+  if (!dbPlat) {
+    return res.status(400).json({ success: false, error: "SERVER_ERROR", message: "Invalid platform specified." });
   }
 
   try {
-    const fetchedData = await syncPlatformData(userId, platform, username);
+    // 1. Validate against the python service FIRST
+    const syncResult = await syncPlatformData(userId, platform, username);
 
-    if (!fetchedData) {
-      return res.status(500).json({ error: "Failed to fetch platform data." });
+    if (!syncResult.success) {
+      return res.status(400).json({ 
+          success: false, 
+          error: syncResult.error,
+          message: syncResult.error === "INVALID_USERNAME" ? "The username doesn't exist on this platform." : "Unable to fetch data."
+      });
     }
 
-    return res.status(200).json({ success: true, data: fetchedData });
+    // 2. Only if valid, upsert into platform_connections
+    await pool.query(`
+        INSERT INTO platform_connections (
+          user_id, ${dbPlat.user}, ${dbPlat.connected}, updated_at
+        ) VALUES ($1, $2, TRUE, NOW())
+        ON CONFLICT (user_id) DO UPDATE SET
+          ${dbPlat.user} = EXCLUDED.${dbPlat.user},
+          ${dbPlat.connected} = TRUE,
+          updated_at = NOW();
+      `, [userId, username]);
+
+    return res.status(200).json({ 
+        success: true, 
+        message: "Platform updated successfully.",
+        data: syncResult.data 
+    });
+
   } catch (error) {
-    console.error("❌ Single script execution error:", error);
-    return res.status(500).json({ error: "Failed to fetch platform profile." });
+    console.error("❌ Edit platform execution error:", error);
+    return res.status(500).json({ success: false, error: "SERVER_ERROR" });
   }
 };
 
@@ -443,15 +493,20 @@ export const runPlatformScript = async (req, res) => {
 // =========================
 export const getPlatforms = async (req, res) => {
   try {
-    const profile = await pool.query(
+    const connections = await pool.query(
+      "SELECT * FROM platform_connections WHERE user_id=$1",
+      [req.user.id]
+    );
+
+    const stats = await pool.query(
       "SELECT * FROM coding_profiles WHERE user_id=$1",
       [req.user.id]
     );
 
     return res.json({
       success: true,
-      connections: profile.rows[0] || {},
-      profile: profile.rows[0] || {},
+      data: connections.rows[0] || {}, 
+      stats: stats.rows[0] || {}, 
     });
   } catch (err) {
     console.error("Get Platforms Error:", err);

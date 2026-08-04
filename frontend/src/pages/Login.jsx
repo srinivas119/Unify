@@ -2,17 +2,17 @@ import { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 
 function Login() {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
+  const { error: toastError, success: toastSuccess } = useToast();
 
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
-
-  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setForm({
@@ -23,16 +23,15 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
 
     try {
       const res = await api.post("/auth/login", form);
 
       login(res.data);
-
+      toastSuccess("Login Successful", "Welcome back!");
       navigate("/");
     } catch (err) {
-      setError(err.response?.data?.message || "Login Failed");
+      toastError("Login Failed", err.response?.data?.message || "Invalid credentials");
     }
   };
 
@@ -49,12 +48,6 @@ function Login() {
         <p className="text-center text-slate-400 mt-2 mb-8">
           Login to your account
         </p>
-
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500 text-red-400 p-3 text-sm">
-            {error}
-          </div>
-        )}
 
         <div className="space-y-5">
           <input

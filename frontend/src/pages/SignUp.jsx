@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
+import { useToast } from "../context/ToastContext";
 
 function Signup() {
+  const { error: toastError, success: toastSuccess } = useToast();
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -10,7 +12,7 @@ function Signup() {
   });
 
   const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [usernameTaken, setUsernameTaken] = useState(false);
   
   // Resend state
   const [isResending, setIsResending] = useState(false);
@@ -25,8 +27,10 @@ function Signup() {
     try {
         const res = await api.post("/auth/resend-verification", { email: form.email });
         setResendMessage(res.data.message);
+        toastSuccess("Verification Resent", "Check your inbox (and spam folder).");
     } catch (err) {
         setResendError(err.response?.data?.message || "Failed to resend verification email");
+        toastError("Resend Failed", err.response?.data?.message || "Failed to resend verification email");
     } finally {
         setIsResending(false);
     }
@@ -43,13 +47,18 @@ function Signup() {
     e.preventDefault();
 
     setMessage("");
-    setError("");
+    setUsernameTaken(false);
 
     try {
       const res = await api.post("/auth/signup", form);
       setMessage(res.data.message);
+      toastSuccess("Signup Successful", "Check your email for the verification link.");
     } catch (err) {
-      setError(err.response?.data?.message || "Signup Failed");
+      if (err.response?.status === 409 && err.response?.data?.message === "Username is not available.") {
+         setUsernameTaken(true);
+      } else {
+         toastError("Signup Failed", err.response?.data?.message || "An error occurred during signup");
+      }
     }
   };
 
@@ -106,9 +115,11 @@ function Signup() {
           </div>
         )}
 
-        {!message && error && (
-          <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500 text-red-400 p-3 text-sm">
-            {error}
+        {usernameTaken && (
+          <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500 text-red-400 p-4">
+            <h3 className="font-bold text-lg mb-1">Username Not Available</h3>
+            <p className="text-sm">This username is already taken.</p>
+            <p className="text-sm mt-1">Please choose another username.</p>
           </div>
         )}
 

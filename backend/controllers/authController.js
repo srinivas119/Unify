@@ -71,6 +71,13 @@ export const signup = async (req, res) => {
 
     } catch (err) {
         console.error("Signup Error:", err);
+        // Handle Postgres Unique Violation for username
+        if (err.code === '23505' && err.constraint === 'unique_username') {
+             return res.status(409).json({
+                success: false,
+                message: "Username is not available."
+            });
+        }
         return res.status(500).json({
             success: false,
             message: "Internal Server Error"
