@@ -2,13 +2,19 @@
 
 .dashboard {
   min-height: 100vh;
-  padding: 24px;
-  background: #f5f7fb;
+  padding: 32px;
+
+  background:
+    radial-gradient(circle at top, #1e3a8a 0%, transparent 35%),
+    radial-gradient(circle at right, #312e81 0%, transparent 30%),
+    #020617;
+
+  color: white;
+
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 32px;
 }
-
 /* ================= Layout ================= */
 
 .topSection {
@@ -47,32 +53,107 @@
 }
 
 /* ================= Common Card ================= */
+/* ================= Common Card ================= */
 
 .card,
 .summaryCard,
-.leetcodeCard {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-  transition: .3s;
+.leetcodeCard{
+
+    position:relative;
+
+   background:linear-gradient(
+180deg,
+#111827,
+#0F172A
+);
+
+border: 1px solid #1E293B;
+
+color: white;
+
+    border-radius:20px;
+
+    overflow:hidden;
+
+    transition:all .35s ease;
+
+  box-shadow:
+0 10px 35px rgba(0,0,0,.35);
+
+    backdrop-filter:blur(12px);
 }
 
-.card {
-  padding: 20px;
+.card{
+    padding:20px;
 }
 
-.summaryCard {
-  padding: 22px;
-  text-align: center;
+.summaryCard{
+    padding:32px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    gap:12px;
+    min-height:520px;
 }
 
-.leetcodeCard {
-  padding: 25px;
+.leetcodeCard{
+    padding:25px;
 }
+
+/* Blue Top Border */
+
+.card::before,
+.summaryCard::before,
+.leetcodeCard::before{
+
+    content:"";
+
+    position:absolute;
+
+    left:0;
+    top:0;
+
+    width:100%;
+    height:3px;
+
+    background:linear-gradient(
+        90deg,
+        #2563EB,
+        #3B82F6,
+        #60A5FA
+    );
+
+    transform:scaleX(0);
+
+    transition:.35s;
+
+    transform-origin:left;
+}
+
+/* Hover */
 
 .card:hover,
-.summaryCard:hover {
-  transform: translateY(-5px);
+.summaryCard:hover,
+.leetcodeCard:hover{
+    transform: translateY(-6px);
+
+    border: 1px solid #3B82F6;
+
+    box-shadow:
+        0 -12px 28px rgba(37,99,235,.18), /* Top */
+        0 18px 35px rgba(37,99,235,.22),  /* Bottom */
+        -8px 0 22px rgba(37,99,235,.12),  /* Left */
+        8px 0 22px rgba(37,99,235,.12),   /* Right */
+        0 0 45px rgba(59,130,246,.18);    /* Outer glow */
+}
+.card:hover::before,
+.summaryCard:hover::before,
+.leetcodeCard:hover::before{
+
+    transform:scaleX(1);
+
 }
 
 /* ================= Typography ================= */
@@ -84,9 +165,10 @@
 }
 
 .card h3,
-.summaryCard h3 {
-  margin-bottom: 10px;
-  color: #111827;
+.summaryCard h3{
+    color:#ffffff;
+    font-size:34px;
+    margin:0;
 }
 
 .card h4 {
@@ -94,15 +176,16 @@
 }
 
 .card p,
-.summaryCard p {
-  color: #6b7280;
-  margin-top: 10px;
+.summaryCard p{
+    color:#94A3B8;
+    margin:0;
 }
 
-.summaryCard h1 {
-  margin: 12px 0;
-  color: #2563eb;
-  font-size: 38px;
+.summaryCard h1{
+    font-size:64px;
+    font-weight:700;
+    color:#ffffff;
+    margin:0;
 }
 
 /* ================= Platform List ================= */
@@ -124,8 +207,24 @@
   transition: .3s;
 }
 
-.platformItem:hover {
-  background: #dbeafe;
+.platformItem{
+
+    transition:.3s;
+
+    border:1px solid transparent;
+}
+
+.platformItem:hover{
+
+    background:#F8FBFF;
+
+    border-color:#3B82F6;
+
+    color:#2563EB;
+
+    box-shadow:
+    0 8px 20px rgba(37,99,235,.12);
+
 }
 
 /* ================= Stats ================= */
@@ -160,15 +259,15 @@
 
 /* ================= Graph ================= */
 
-.graph {
-  height: 200px;
-  margin-top: 15px;
-  border-radius: 10px;
-  background: #eef4ff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 20px;
+.graph{
+    height:220px;
+    border-radius:16px;
+    background:#111827;
+    border:1px solid #1e293b;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:#94a3b8;
 }
 
 /* ================= Form ================= */
@@ -213,16 +312,16 @@
   z-index: 1000;
 }
 
-.modal {
-  width: 500px;
-  max-width: 90%;
-  background: white;
-  border-radius: 15px;
-  padding: 30px;
-  position: relative;
-  animation: popup .25s ease;
+.modal{
+    width:500px;
+    max-width:90%;
+    background:#0f172a;
+    color:white;
+    border:1px solid #1e293b;
+    border-radius:18px;
+    padding:30px;
+    position:relative;
 }
-
 @keyframes popup {
   from {
     transform: scale(.9);
@@ -263,15 +362,25 @@
 .cancelBtn {
   background: #9ca3af;
 }
+.connectBtn{
 
-.connectBtn {
-  background: #2563eb;
+    background:linear-gradient(
+    135deg,
+    #2563EB,
+    #3B82F6
+    );
+
+    transition:.3s;
 }
 
-.connectBtn:hover {
-  background: #1d4ed8;
-}
+.connectBtn:hover{
 
+    transform:translateY(-2px);
+
+    box-shadow:
+    0 12px 24px rgba(37,99,235,.25);
+
+}
 /* ================= LeetCode Card ================= */
 
 .leetcodeHeader {
@@ -465,20 +574,47 @@
   margin-top: 2px;
 }
 
-.connected {
-  background: #dcfce7;
-  color: #15803d;
-  padding: 5px 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
+.connected{
+
+    background:#ECFDF5;
+
+    color:#059669;
+
+    border:1px solid #6EE7B7;
+
+}
+.notConnected{
+
+    background:#FEF2F2;
+
+    color:#DC2626;
+
+    border:1px solid #FCA5A5;
+
+}
+.statBox{
+    background:#0f172a;
+    border:1px solid #1e293b;
+    border-radius:14px;
+    padding:18px;
+    text-align:center;
+    transition:.3s;
 }
 
-.notConnected {
-  background: #fee2e2;
-  color: #dc2626;
-  padding: 5px 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
+.statBox:hover{
+    border-color:#3b82f6;
+    transform:translateY(-4px);
+}
+
+.statBox h4{
+    margin-top:10px;
+    color:#94a3b8;
+    font-size:14px;
+}
+
+.statBox h2{
+    margin-top:8px;
+    color:white;
+    font-size:24px;
+    font-weight:700;
 }
