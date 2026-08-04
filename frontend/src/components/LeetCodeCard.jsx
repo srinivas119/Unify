@@ -107,6 +107,14 @@ const LeetCodeCard = ({ data }) => {
     </p>
   </div>
 </div>
+
+</div>   {/* <-- Missing closing div for leetcodeCard */}
+
+  );
+};
+
+export default LeetCodeCard;
+</div>
   );
 };
 
