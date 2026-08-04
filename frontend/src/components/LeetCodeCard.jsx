@@ -88,24 +88,25 @@ const LeetCodeCard = ({ data }) => {
         </div>
       </div>
 
-      <div className={styles.leetcodeFooter}>
-        <div>
-          <h4>Acceptance</h4>
-          <p>{data.acceptance}</p>
-        </div>
+     <div className={styles.leetcodeFooter}>
+  <div>
+    <h4>Acceptance</h4>
+    <p>
+      {data.acceptance && data.acceptance > 0
+        ? `${data.acceptance}%`
+        : "N/A"}
+    </p>
+  </div>
 
-        <div>
-          <p>{data.rating}</p>
-
-<p>{data.ranking}</p>
-        </div>
-
-        <div>
-          <h4>Ranking</h4>
-          <p>Top 12%</p>
-        </div>
-      </div>
-    </div>
+  <div>
+    <h4>Rank</h4>
+    <p>
+      {data.ranking
+        ? data.ranking.toLocaleString()
+        : "N/A"}
+    </p>
+  </div>
+</div>
   );
 };
 
