@@ -7,7 +7,7 @@ import "react-circular-progressbar/dist/styles.css";
 
 const LeetCodeCard = ({ data }) => {
   const totalQuestions = 3600;
-  const solved = data.total;
+  const solved = data?.total ?? 0;
 
   return (
     <div className={styles.leetcodeCard}>
@@ -35,54 +35,51 @@ const LeetCodeCard = ({ data }) => {
       </div>
 
       {/* Easy */}
-
       <div className={styles.progressItem}>
         <div className={styles.progressLabel}>
           <span className={styles.easy}>Easy</span>
-          <span>{data.easy}</span>
+          <span>{data?.easy ?? 0}</span>
         </div>
 
         <div className={styles.progressTrack}>
           <div
             className={styles.easyFill}
             style={{
-              width: `${(data.easy / 890) * 100}%`,
+              width: `${((data?.easy ?? 0) / 890) * 100}%`,
             }}
           ></div>
         </div>
       </div>
 
       {/* Medium */}
-
       <div className={styles.progressItem}>
         <div className={styles.progressLabel}>
           <span className={styles.medium}>Medium</span>
-          <span>{data.medium}</span>
+          <span>{data?.medium ?? 0}</span>
         </div>
 
         <div className={styles.progressTrack}>
           <div
             className={styles.mediumFill}
             style={{
-              width: `${(data.medium / 1880) * 100}%`,
+              width: `${((data?.medium ?? 0) / 1880) * 100}%`,
             }}
           ></div>
         </div>
       </div>
 
       {/* Hard */}
-
       <div className={styles.progressItem}>
         <div className={styles.progressLabel}>
           <span className={styles.hard}>Hard</span>
-          <span>{data.hard}</span>
+          <span>{data?.hard ?? 0}</span>
         </div>
 
         <div className={styles.progressTrack}>
           <div
             className={styles.hardFill}
             style={{
-              width: `${(data.hard / 830) * 100}%`,
+              width: `${((data?.hard ?? 0) / 830) * 100}%`,
             }}
           ></div>
         </div>
@@ -91,14 +88,12 @@ const LeetCodeCard = ({ data }) => {
       <div className={styles.leetcodeFooter}>
         <div>
           <h4>Acceptance</h4>
-          <p>{data.acceptance}</p>
+          <p>{data?.acceptance ?? "N/A"}</p>
         </div>
-
-        
 
         <div>
           <h4>Ranking</h4>
-          <p>{data.ranking}</p>
+          <p>{data?.ranking ? data.ranking.toLocaleString() : "N/A"}</p>
         </div>
       </div>
     </div>
