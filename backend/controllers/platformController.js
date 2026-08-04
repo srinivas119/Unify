@@ -160,9 +160,9 @@ const syncPlatformData = async (userId, platform, username) => {
 
   
         case "codechef": {
-        const easy = safeInt(data.easy || data.easy_solved);
-        const medium = safeInt(data.medium || data.medium_solved);
-        const hard = safeInt(data.hard || data.hard_solved);
+        let easy = safeInt(data.easy || data.easy_solved);
+        let medium = safeInt(data.medium || data.medium_solved);
+        let hard = safeInt(data.hard || data.hard_solved);
         
         let totalCodechefSolved = safeInt(data.total || data.solved || data.total_solved) || (easy + medium + hard);
 
@@ -186,7 +186,7 @@ const syncPlatformData = async (userId, platform, username) => {
           )
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
           ON CONFLICT (user_id) DO UPDATE SET
-            codechef_solved = EXCLUDED.codechef_solved,
+            codechef_total = EXCLUDED.codechef_total,
             codechef_easy = EXCLUDED.codechef_easy,
             codechef_medium = EXCLUDED.codechef_medium,
             codechef_hard = EXCLUDED.codechef_hard,
