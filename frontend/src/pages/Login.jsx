@@ -85,6 +85,15 @@ function Login() {
           </button>
         </div>
 
+        <div className="mt-4 text-center">
+            <Link
+                to="/forgot-password"
+                className="text-sm font-semibold text-blue-400 hover:text-blue-300"
+            >
+                Forgot Password?
+            </Link>
+        </div>
+
         <p className="mt-6 text-center text-slate-400">
           Don't have an account?{" "}
           <Link

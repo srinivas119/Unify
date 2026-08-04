@@ -11,6 +11,26 @@ function Signup() {
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  
+  // Resend state
+  const [isResending, setIsResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
+  const [resendError, setResendError] = useState("");
+
+  const handleResend = async () => {
+    setIsResending(true);
+    setResendMessage("");
+    setResendError("");
+    
+    try {
+        const res = await api.post("/auth/resend-verification", { email: form.email });
+        setResendMessage(res.data.message);
+    } catch (err) {
+        setResendError(err.response?.data?.message || "Failed to resend verification email");
+    } finally {
+        setIsResending(false);
+    }
+  };
 
   const handleChange = (e) => {
     setForm({
@@ -48,12 +68,45 @@ function Signup() {
         </p>
 
         {message && (
-          <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500 text-green-400 p-3 text-sm">
-            {message}
+          <div className="mb-4 rounded-lg border border-slate-700 bg-slate-800 p-5 shadow-inner">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500/20 text-green-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-slate-200">Signup Successful!</h3>
+            </div>
+            
+            <p className="text-slate-300 text-sm mb-3 ml-11">
+              {message}
+            </p>
+
+            <div className="ml-11 mb-4 rounded bg-yellow-500/10 p-3 border border-yellow-500/20">
+              <p className="text-sm text-yellow-500">
+                <span className="font-semibold">Don't see the email?</span> Check your Spam/Junk folder.
+              </p>
+            </div>
+
+            <button
+                type="button"
+                onClick={handleResend}
+                disabled={isResending}
+                className="ml-11 mt-2 text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                {isResending ? "Resending..." : "🔄 Resend Verification Email"}
+            </button>
+            
+            {resendMessage && (
+                <p className="ml-11 mt-2 text-xs text-green-400">{resendMessage}</p>
+            )}
+             {resendError && (
+                <p className="ml-11 mt-2 text-xs text-red-400">{resendError}</p>
+            )}
           </div>
         )}
 
-        {error && (
+        {!message && error && (
           <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500 text-red-400 p-3 text-sm">
             {error}
           </div>
