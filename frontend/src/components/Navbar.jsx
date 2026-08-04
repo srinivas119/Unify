@@ -169,7 +169,7 @@ const Navbar = () => {
 
               <Link
                 to="/profile"
-                className="flex items-center gap-3 px-5 py-3 hover:bg-slate-800 transition"
+              className="flex items-center gap-3 px-5 py-3 text-slate-300 hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-200"
               >
                 <User size={18} />
                 Profile
