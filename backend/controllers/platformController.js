@@ -365,19 +365,37 @@ await pool.query(
 );
 
     // Fetch metric updates concurrently for each configured platform username
-    const platformsToFetch = [
-      { name: "github", username: github },
-      { name: "leetcode", username: leetcode },
-      { name: "codeforces", username: codeforces },
-      { name: "codechef", username: codechef },
-      { name: "gfg", username: gfg },
-    ];
+  // Read the latest usernames after saving them
+const { rows } = await pool.query(
+  `
+  SELECT
+    github_username,
+    leetcode_username,
+    codeforces_username,
+    codechef_username,
+    geeksforgeeks_username
+  FROM platform_connections
+  WHERE user_id = $1
+  `,
+  [userId]
+);
 
-    const syncPromises = platformsToFetch
-      .filter((p) => Boolean(p.username))
-      .map((p) => syncPlatformData(userId, p.name, p.username));
+const saved = rows[0];
 
-    await Promise.allSettled(syncPromises);
+const platformsToFetch = [
+  { name: "github", username: saved.github_username },
+  { name: "leetcode", username: saved.leetcode_username },
+  { name: "codeforces", username: saved.codeforces_username },
+  { name: "codechef", username: saved.codechef_username },
+  { name: "gfg", username: saved.geeksforgeeks_username },
+];
+
+for (const platform of platformsToFetch) {
+  if (platform.username) {
+    console.log(`Refreshing ${platform.name}: ${platform.username}`);
+    await syncPlatformData(userId, platform.name, platform.username);
+  }
+}
 
     return res.status(200).json({
       success: true,
