@@ -1,5 +1,5 @@
 import styles from "./Dashboard.module.css";
-
+import Navbar from "../components/Navbar";
 import useDashboard from "../hooks/useDashboard";
 import ConnectedPlatformsCard from "../components/ConnectedPlatformsCard";
 import WelcomeCard from "../components/WelcomeCard";
@@ -17,31 +17,43 @@ const DashboardPage = () => {
   if (loading) return <h2>Loading...</h2>;
 
   return (
-    <div className={styles.dashboard}>
-      <div className={styles.topSection}>
-        <WelcomeCard user={dashboard} />
+    <>
+      <Navbar />
 
-        <ScoreCard score={dashboard.score} />
-      
-  <ConnectedPlatformsCard
-    platforms={dashboard.platforms}
-/>
-      </div>
+      <main className={styles.dashboard}>
+        {/* ===== Top Cards ===== */}
+        <section className={styles.topSection}>
+          <WelcomeCard user={dashboard} />
 
-      <QuickStats codingScore={dashboard.codingScore} />
+          <ScoreCard score={dashboard.score} />
 
-    <div className={styles.platformGrid}>
-  <LeetCodeCard data={dashboard.leetcode} />
+          <ConnectedPlatformsCard
+            platforms={dashboard.platforms}
+          />
+        </section>
 
-  <CodeChefCard data={dashboard.codechef} />
+        {/* ===== Total Coding Score ===== */}
+        <QuickStats
+          codingScore={dashboard.codingScore}
+        />
 
-  <CodeforcesCard data={dashboard.codeforces} />
+        {/* ===== Platform Cards ===== */}
+        <section className={styles.platformGrid}>
+          <LeetCodeCard data={dashboard.leetcode} />
 
-  <GeeksforGeeksCard data={dashboard.geeksforgeeks} />
-</div>
+          <CodeChefCard data={dashboard.codechef} />
 
-      <ContributionGraph />
-    </div>
+          <CodeforcesCard data={dashboard.codeforces} />
+
+          <GeeksforGeeksCard
+            data={dashboard.geeksforgeeks}
+          />
+        </section>
+
+        {/* ===== Contribution Graph ===== */}
+        <ContributionGraph />
+      </main>
+    </>
   );
 };
 
