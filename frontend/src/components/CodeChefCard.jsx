@@ -75,20 +75,14 @@ const CodeChefCard = ({ data }) => {
       </div>
 
       <div className={styles.leetcodeFooter}>
-        <div>
-          <h4>Stars</h4>
-          <p>{data.stars}</p>
-        </div>
+        
 
         <div>
           <h4>Rating</h4>
           <p>{data.rating}</p>
         </div>
 
-        <div>
-          <h4>Highest</h4>
-          <p>{data.highestRating}</p>
-        </div>
+        
       </div>
     </div>
   );
