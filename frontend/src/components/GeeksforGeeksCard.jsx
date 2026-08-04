@@ -68,15 +68,7 @@ const GeeksforGeeksCard = ({ data }) => {
       </div>
 
       <div className={styles.leetcodeFooter}>
-        <div>
-          <h4>Coding Score</h4>
-          <p>{data.codingScore}</p>
-        </div>
-
-        <div>
-          <h4>Institute Rank</h4>
-          <p>{data.instituteRank}</p>
-        </div>
+       
 
         <div>
           <h4>Total</h4>
