@@ -6,7 +6,7 @@ import {
 import "react-circular-progressbar/dist/styles.css";
 
 const LeetCodeCard = ({ data }) => {
-  const totalQuestions = 3600;
+  const totalQuestions = 4013;
   const solved = data.total;
 
   return (
