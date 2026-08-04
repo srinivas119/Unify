@@ -25,6 +25,8 @@ function Profile() {
     const [isEditing, setIsEditing] = useState(false);
 
     const [saved, setSaved] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [errorMsg, setErrorMsg] = useState("");
 
     const [profile, setProfile] = useState({
 
@@ -66,7 +68,9 @@ function Profile() {
 
             const res = await api.get("/profile");
 
-            setProfile(res.data.profile);
+            if (res.data && res.data.profile) {
+                setProfile(res.data.profile);
+            }
 
         }
 
@@ -82,6 +86,27 @@ function Profile() {
 
         }
 
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        setErrorMsg("");
+        try {
+            const res = await api.put("/profile", profile);
+            if (res.data && res.data.profile) {
+                setProfile((prev) => ({ ...prev, ...res.data.profile }));
+            }
+            setSaved(true);
+            setIsEditing(false);
+            setTimeout(() => {
+                setSaved(false);
+            }, 3000);
+        } catch (err) {
+            console.error("Failed to save profile:", err);
+            setErrorMsg(err.response?.data?.message || "Failed to save profile. Please try again.");
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleChange = (e)=>{
@@ -163,12 +188,13 @@ function Profile() {
                         (
 
                             <button
-
-                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 px-6 py-3 rounded-xl">
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 px-6 py-3 rounded-xl">
 
                                 <Save size={18}/>
 
-                                Save Profile
+                                {saving ? "Saving..." : "Save Profile"}
 
                             </button>
 
@@ -187,6 +213,18 @@ function Profile() {
                         <CheckCircle2 size={18}/>
 
                         Profile Updated Successfully
+
+                    </div>
+
+                }
+
+                {
+
+                    errorMsg &&
+
+                    <div className="mb-8 flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400">
+
+                        {errorMsg}
 
                     </div>
 
@@ -561,39 +599,16 @@ function Profile() {
 
                         <button
 
-                            onClick={async()=>{
+                            onClick={handleSave}
+                            disabled={saving}
 
-                                try{
-
-                                    await api.put("/profile",profile);
-
-                                    setSaved(true);
-
-                                    setIsEditing(false);
-
-                                    setTimeout(()=>{
-
-                                        setSaved(false);
-
-                                    },3000);
-
-                                }
-
-                                catch(err){
-
-                                    console.log(err);
-
-                                }
-
-                            }}
-
-                            className="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+                            className="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
 
                         >
 
                             <Save size={18}/>
 
-                            Save Profile
+                            {saving ? "Saving..." : "Save Profile"}
 
                         </button>
 

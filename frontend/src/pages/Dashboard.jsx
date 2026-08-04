@@ -51,7 +51,10 @@ const DashboardPage = () => {
         </section>
 
         {/* ===== Contribution Graph ===== */}
-        <ContributionGraph />
+        <ContributionGraph
+          username={dashboard.platforms?.github?.username}
+          githubData={dashboard.github}
+        />
       </main>
     </>
   );

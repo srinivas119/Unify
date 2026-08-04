@@ -4,6 +4,7 @@ import cors from "cors";
 import platformRoutes from "./routes/platformRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import profileRoutes from "./routes/profileRoutes.js";
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.use(
 
 app.use(express.json());
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/profile", profileRoutes);
 app.get("/", (req, res) => {
 
     res.send("🚀 Welcome To UnifyCode Backend");
