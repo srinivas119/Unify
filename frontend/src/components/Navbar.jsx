@@ -143,37 +143,37 @@ const Navbar = () => {
 
               </div>
 
-              <Link
-                to="/"
-                className="flex items-center gap-3 px-5 py-3 hover:bg-slate-800 transition"
-              >
-                <House size={18} />
-                Home
-              </Link>
+            <Link
+  to="/"
+  className="flex items-center gap-3 px-5 py-3 text-slate-300 hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-200"
+>
+  <House size={18} />
+  Home
+</Link>
 
-              <Link
-                to="/dashboard"
-                className="flex items-center gap-3 px-5 py-3 hover:bg-slate-800 transition"
-              >
-                <LayoutDashboard size={18} />
-                Dashboard
-              </Link>
+<Link
+  to="/dashboard"
+  className="flex items-center gap-3 px-5 py-3 text-slate-300 hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-200"
+>
+  <LayoutDashboard size={18} />
+  Dashboard
+</Link>
 
-              <Link
-                to="/platforms"
-                className="flex items-center gap-3 px-5 py-3 hover:bg-slate-800 transition"
-              >
-                <Link2 size={18} />
-                Platforms
-              </Link>
+<Link
+  to="/platforms"
+  className="flex items-center gap-3 px-5 py-3 text-slate-300 hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-200"
+>
+  <Link2 size={18} />
+  Platforms
+</Link>
 
-              <Link
-                to="/profile"
-              className="flex items-center gap-3 px-5 py-3 text-slate-300 hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-200"
-              >
-                <User size={18} />
-                Profile
-              </Link>
+<Link
+  to="/profile"
+  className="flex items-center gap-3 px-5 py-3 text-slate-300 hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-200"
+>
+  <User size={18} />
+  Profile
+</Link>
 
               <button
                 onClick={logout}
